@@ -137,6 +137,55 @@
       line-height: 1.5;
     }
 
+    .demo-note a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .auth-submit {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .auth-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      margin-bottom: 14px;
+      text-align: left;
+    }
+
+    .role-card.selected {
+      border-color: var(--primary);
+      background: #f0fdf4;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 13px;
+      grid-column: 1 / -1;
+    }
+
     /* =========================
        APP LAYOUT
     ========================= */
@@ -1107,6 +1156,7 @@
     @media(max-width:1000px){.product-grid{grid-template-columns:repeat(3,1fr)}.category-grid{grid-template-columns:repeat(3,1fr)}.shop-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:700px){.product-grid{grid-template-columns:repeat(2,1fr);gap:10px}.service-grid,.shop-grid{grid-template-columns:1fr}.product-photo{height:105px}.category-grid{grid-template-columns:repeat(3,1fr)}.store-banner{align-items:flex-start;flex-direction:column}}
 
+
   </style>
 </head>
 
@@ -1124,15 +1174,24 @@
     <h1>PETANI</h1>
     <p class="subtitle">Ekosistem Digital Pertanian</p>
 
-    <div class="role-grid">
+    <div id="authError" class="auth-error" style="display:none"></div>
 
-      <button class="role-card" onclick="loginAs('pengguna')">
+    <div id="registerNameField" style="display:none">
+      <input type="text" id="authName" class="auth-input" placeholder="Nama lengkap" />
+    </div>
+
+    <input type="email" id="authEmail" class="auth-input" placeholder="Email" autocomplete="email" />
+    <input type="password" id="authPassword" class="auth-input" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password" />
+
+    <div class="role-grid" id="registerRoleField" style="display:none">
+
+      <button type="button" class="role-card" id="roleCardPengguna" onclick="selectRegisterRole('pengguna')">
         <div class="role-icon">👨‍🌾</div>
         <strong>Petani Pengguna</strong>
         <span>Petani, pemilik & pengelola lahan</span>
       </button>
 
-      <button class="role-card" onclick="loginAs('mitra')">
+      <button type="button" class="role-card" id="roleCardMitra" onclick="selectRegisterRole('mitra')">
         <div class="role-icon">🧑‍🌾</div>
         <strong>Petani Mitra</strong>
         <span>Pemanen, pekerja & penyedia jasa</span>
@@ -1140,9 +1199,12 @@
 
     </div>
 
-    <p class="demo-note">
-      Prototype PETANI Cloud v0.1<br>
-      Pilih jenis akun untuk mencoba aplikasi.
+    <button type="button" class="btn btn-primary auth-submit" id="authSubmitBtn" onclick="handleAuthSubmit()" style="margin-top:14px">
+      Masuk
+    </button>
+
+    <p class="demo-note" id="authToggleNote">
+      Belum punya akun? <a href="#" onclick="toggleAuthMode(); return false;">Daftar di sini</a>
     </p>
 
   </div>
@@ -1462,102 +1524,8 @@
       </div>
 
 
-      <div class="farm-grid">
-
-        <div class="farm-card">
-
-          <div class="farm-photo">🌴</div>
-
-          <div class="farm-content">
-            <h3>Kebun Makmur</h3>
-            <div class="farm-location">📍 Lampung Selatan</div>
-
-            <div class="farm-info">
-              <div>
-                <small>Komoditas</small>
-                <strong>Sawit</strong>
-              </div>
-              <div>
-                <small>Luas</small>
-                <strong>4,2 ha</strong>
-              </div>
-              <div>
-                <small>Status</small>
-                <strong>Aktif</strong>
-              </div>
-              <div>
-                <small>Panen</small>
-                <strong>850 kg</strong>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="farm-card">
-
-          <div class="farm-photo">🌾</div>
-
-          <div class="farm-content">
-            <h3>Sawah Harapan</h3>
-            <div class="farm-location">📍 Lampung Selatan</div>
-
-            <div class="farm-info">
-              <div>
-                <small>Komoditas</small>
-                <strong>Padi</strong>
-              </div>
-              <div>
-                <small>Luas</small>
-                <strong>1,5 ha</strong>
-              </div>
-              <div>
-                <small>Status</small>
-                <strong>Aktif</strong>
-              </div>
-              <div>
-                <small>Musim</small>
-                <strong>MT II</strong>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="farm-card">
-
-          <div class="farm-photo">🌽</div>
-
-          <div class="farm-content">
-            <h3>Lahan Sejahtera</h3>
-            <div class="farm-location">📍 Bandar Lampung</div>
-
-            <div class="farm-info">
-              <div>
-                <small>Komoditas</small>
-                <strong>Jagung</strong>
-              </div>
-              <div>
-                <small>Luas</small>
-                <strong>2 ha</strong>
-              </div>
-              <div>
-                <small>Status</small>
-                <strong>Aktif</strong>
-              </div>
-              <div>
-                <small>Panen</small>
-                <strong>650 kg</strong>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
+      <div class="farm-grid" id="farmGrid">
+        <div class="empty-state">Memuat data lahan…</div>
 
       </div>
 
@@ -2192,12 +2160,12 @@
 
       <div class="form-group">
         <label>Luas Lahan</label>
-        <input type="number" placeholder="Contoh: 2.5">
+        <input type="number" id="farmSize" placeholder="Contoh: 2.5">
       </div>
 
       <div class="form-group">
         <label>Satuan</label>
-        <select>
+        <select id="farmUnit">
           <option>Hektare (ha)</option>
           <option>Meter persegi</option>
         </select>
@@ -2205,7 +2173,7 @@
 
       <div class="form-group full">
         <label>Lokasi</label>
-        <input placeholder="Alamat/lokasi lahan">
+        <input id="farmLocation" placeholder="Alamat/lokasi lahan">
       </div>
 
       <div class="form-group full">
@@ -2441,432 +2409,647 @@
 <div class="toast" id="toast"></div>
 
 
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+
 <script>
+/* =====================================================
+   STATE — data yang dipakai bersama antar modul.
+   Nanti bagian ini yang akan diganti dengan data
+   dari Firestore (bukan lagi hardcoded / localStorage).
+===================================================== */
 
-  /* =====================================================
-     DATA DEMO
-  ===================================================== */
+let currentRole = null;
+let currentUserId = null;
 
-  let currentRole = localStorage.getItem("petaniRole") || null;
+const userData = {
+  pengguna: {
+    name: "Andi Rahman",
+    initials: "AR",
+    role: "Petani Pengguna"
+  },
+  mitra: {
+    name: "Budi Santoso",
+    initials: "BS",
+    role: "Petani Mitra"
+  }
+};
 
-  const userData = {
-    pengguna: {
-      name: "Andi Rahman",
-      initials: "AR",
-      role: "Petani Pengguna"
-    },
-    mitra: {
-      name: "Budi Santoso",
-      initials: "BS",
-      role: "Petani Mitra"
+let cart = JSON.parse(localStorage.getItem("petaniCart") || "[]");
+let marketCategory = "all";
+
+
+/* =====================================================
+   UI — toast & modal, dipakai oleh semua modul lain.
+===================================================== */
+
+let toastTimer;
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2600);
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add("show");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("show");
+}
+
+document.querySelectorAll(".modal-overlay").forEach(modal => {
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) {
+      modal.classList.remove("show");
     }
-  };
-
-
-  /* =====================================================
-     LOGIN
-  ===================================================== */
-
-  function loginAs(role) {
-
-    currentRole = role;
-
-    localStorage.setItem("petaniRole", role);
-
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("app").style.display = "block";
-
-    updateUserInterface();
-
-    if (role === "mitra") {
-      activateMitraMode();
-    }
-
-  }
-
-
-  function updateUserInterface() {
-
-    const user = userData[currentRole];
-
-    document.getElementById("topName").textContent = user.name;
-    document.getElementById("topAvatar").textContent = user.initials;
-
-    document.getElementById("profileName").textContent = user.name;
-    document.getElementById("profileRole").textContent = user.role;
-    document.getElementById("profileAvatar").textContent = user.initials;
-
-    document.getElementById("profileNameInput").value = user.name;
-
-    document.getElementById("welcomeTitle").textContent =
-      `Selamat datang, ${user.name.split(" ")[0]}! 👋`;
-
-    if (currentRole === "mitra") {
-
-      document.getElementById("welcomeText").textContent =
-        "Temukan pekerjaan pertanian di sekitar Anda, kelola pekerjaan aktif, dan pantau pendapatan.";
-
-    }
-
-  }
-
-
-  /* =====================================================
-     MITRA MODE
-  ===================================================== */
-
-  function activateMitraMode() {
-
-    document.querySelector('[data-page="lahan"]').style.display = "none";
-
-    document.querySelector('[data-page="pekerjaan"]').innerHTML =
-      '<span class="nav-icon">📋</span> Pekerjaan Tersedia';
-
-    document.querySelector('[data-page="panen"]').innerHTML =
-      '<span class="nav-icon">💼</span> Pekerjaan Saya';
-
-    document.querySelector('[data-page="transaksi"]').innerHTML =
-      '<span class="nav-icon">💰</span> Pendapatan';
-
-    document.getElementById("page-pekerjaan").querySelector("p").textContent =
-      "Temukan pekerjaan pertanian di sekitar Anda.";
-
-    const headerButton =
-      document.getElementById("page-pekerjaan").querySelector(".btn");
-
-    headerButton.textContent = "📍 Cari Pekerjaan";
-
-    headerButton.onclick = function() {
-      showToast("Mencari pekerjaan di sekitar lokasi Anda...");
-    };
-
-    document.getElementById("page-panen").querySelector("h2").textContent =
-      "Pekerjaan Saya";
-
-    document.getElementById("page-panen").querySelector("p").textContent =
-      "Pekerjaan yang sedang dan telah Anda selesaikan.";
-
-  }
-
-
-  /* =====================================================
-     LOGOUT
-  ===================================================== */
-
-  function logout() {
-
-    localStorage.removeItem("petaniRole");
-
-    location.reload();
-
-  }
-
-
-  /* =====================================================
-     NAVIGATION
-  ===================================================== */
-
-  function showPage(page, clickedButton = null) {
-
-    document.querySelectorAll(".page").forEach(p => {
-      p.classList.remove("active");
-    });
-
-    const target = document.getElementById("page-" + page);
-
-    if (target) {
-      target.classList.add("active");
-    }
-
-    document.querySelectorAll(".nav-item").forEach(btn => {
-      btn.classList.remove("active");
-    });
-
-    const navButton =
-      clickedButton ||
-      document.querySelector(`.nav-item[data-page="${page}"]`);
-
-    if (navButton) {
-      navButton.classList.add("active");
-    }
-
-    const titles = {
-      dashboard: ["Dashboard", "Ringkasan aktivitas pertanian Anda"],
-      lahan: ["Lahan Saya", "Kelola seluruh lahan pertanian"],
-      pekerjaan: ["Pekerjaan", "Kelola aktivitas pekerjaan pertanian"],
-      panen: ["Hasil Panen", "Catatan hasil pertanian"],
-      marketplace: ["Marketplace", "Produk dan jasa pertanian"],
-      toko: ["Toko Saya", "Kelola produk dan jasa Anda"],
-      transaksi: ["Transaksi", "Riwayat transaksi dan pembayaran"],
-      notifikasi: ["Notifikasi", "Informasi terbaru dari PETANI"],
-      profil: ["Profil", "Kelola informasi akun"]
-    };
-
-    if (titles[page]) {
-
-      document.getElementById("pageTitle").textContent =
-        titles[page][0];
-
-      document.getElementById("pageSubtitle").textContent =
-        titles[page][1];
-
-    }
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-
-  }
-
-
-  function mobileNav(page, button) {
-
-    showPage(page);
-
-    document.querySelectorAll(".mobile-nav button")
-      .forEach(btn => btn.classList.remove("active"));
-
-    button.classList.add("active");
-
-  }
-
-
-  /* =====================================================
-     MODAL
-  ===================================================== */
-
-  function openModal(id) {
-    document.getElementById(id).classList.add("show");
-  }
-
-
-  function closeModal(id) {
-    document.getElementById(id).classList.remove("show");
-  }
-
-
-  document.querySelectorAll(".modal-overlay").forEach(modal => {
-
-    modal.addEventListener("click", function(e) {
-
-      if (e.target === modal) {
-        modal.classList.remove("show");
-      }
-
-    });
-
+  });
+});
+
+
+/* =====================================================
+   NAVIGATION — pindah halaman (sidebar & mobile nav).
+===================================================== */
+
+const PAGE_TITLES = {
+  dashboard: ["Dashboard", "Ringkasan aktivitas pertanian Anda"],
+  lahan: ["Lahan Saya", "Kelola seluruh lahan pertanian"],
+  pekerjaan: ["Pekerjaan", "Kelola aktivitas pekerjaan pertanian"],
+  panen: ["Hasil Panen", "Catatan hasil pertanian"],
+  marketplace: ["Marketplace", "Produk dan jasa pertanian"],
+  toko: ["Toko Saya", "Kelola produk dan jasa Anda"],
+  transaksi: ["Transaksi", "Riwayat transaksi dan pembayaran"],
+  notifikasi: ["Notifikasi", "Informasi terbaru dari PETANI"],
+  profil: ["Profil", "Kelola informasi akun"]
+};
+
+function showPage(page, clickedButton = null) {
+  document.querySelectorAll(".page").forEach(p => {
+    p.classList.remove("active");
   });
 
+  const target = document.getElementById("page-" + page);
+  if (target) {
+    target.classList.add("active");
+  }
 
-  /* =====================================================
-     ADD FARM
-  ===================================================== */
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.classList.remove("active");
+  });
 
-  function addFarm() {
+  const navButton =
+    clickedButton || document.querySelector(`.nav-item[data-page="${page}"]`);
 
-    const name = document.getElementById("farmName").value;
+  if (navButton) {
+    navButton.classList.add("active");
+  }
+
+  if (PAGE_TITLES[page]) {
+    document.getElementById("pageTitle").textContent = PAGE_TITLES[page][0];
+    document.getElementById("pageSubtitle").textContent = PAGE_TITLES[page][1];
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function mobileNav(page, button) {
+  showPage(page);
+  document.querySelectorAll(".mobile-nav button").forEach(btn => {
+    btn.classList.remove("active");
+  });
+  button.classList.add("active");
+}
+
+
+/* =====================================================
+   FIREBASE CONFIG — project: petani-8122b
+   Catatan: apiKey untuk aplikasi web Firebase memang
+   didesain untuk terlihat publik (bukan rahasia server).
+   Keamanan data yang sebenarnya diatur lewat Firestore
+   Security Rules (lihat firestore.rules), bukan dengan
+   menyembunyikan config ini.
+===================================================== */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDW5bG6SAF7vA1L38AtwzvULCcCGbRQKoY",
+  authDomain: "petani-8122b.firebaseapp.com",
+  projectId: "petani-8122b",
+  storageBucket: "petani-8122b.firebasestorage.app",
+  messagingSenderId: "491262390663",
+  appId: "1:491262390663:web:6caba3674585e47302a322"
+};
+
+
+/* =====================================================
+   AUTH — login, daftar, logout, & tampilan sesuai role.
+   Menggunakan Firebase Authentication (email/password)
+   dan profil user disimpan di Firestore: users/{uid}.
+===================================================== */
+
+let authMode = "login"; // "login" | "register"
+let selectedRole = null;
+
+function toggleAuthMode() {
+  authMode = authMode === "login" ? "register" : "login";
+  selectedRole = null;
+
+  const isRegister = authMode === "register";
+
+  document.getElementById("registerNameField").style.display = isRegister ? "block" : "none";
+  document.getElementById("registerRoleField").style.display = isRegister ? "grid" : "none";
+  document.getElementById("authSubmitBtn").textContent = isRegister ? "Daftar" : "Masuk";
+
+  document.getElementById("authToggleNote").innerHTML = isRegister
+    ? 'Sudah punya akun? <a href="#" onclick="toggleAuthMode(); return false;">Masuk di sini</a>'
+    : 'Belum punya akun? <a href="#" onclick="toggleAuthMode(); return false;">Daftar di sini</a>';
+
+  document.getElementById("roleCardPengguna").classList.remove("selected");
+  document.getElementById("roleCardMitra").classList.remove("selected");
+  hideAuthError();
+}
+
+function selectRegisterRole(role) {
+  selectedRole = role;
+  document.getElementById("roleCardPengguna").classList.toggle("selected", role === "pengguna");
+  document.getElementById("roleCardMitra").classList.toggle("selected", role === "mitra");
+}
+
+function showAuthError(message) {
+  const el = document.getElementById("authError");
+  el.textContent = message;
+  el.style.display = "block";
+}
+
+function hideAuthError() {
+  document.getElementById("authError").style.display = "none";
+}
+
+function handleAuthSubmit() {
+  hideAuthError();
+
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+
+  if (!email || !password) {
+    showAuthError("Email dan kata sandi wajib diisi.");
+    return;
+  }
+
+  const submitBtn = document.getElementById("authSubmitBtn");
+  submitBtn.disabled = true;
+
+  if (authMode === "register") {
+    const name = document.getElementById("authName").value.trim();
 
     if (!name) {
-      showToast("Nama lahan belum diisi.");
+      showAuthError("Nama lengkap wajib diisi.");
+      submitBtn.disabled = false;
+      return;
+    }
+    if (!selectedRole) {
+      showAuthError("Pilih jenis akun terlebih dahulu.");
+      submitBtn.disabled = false;
       return;
     }
 
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(function (cred) {
+        return db.collection("users").doc(cred.user.uid).set({
+          name: name,
+          email: email,
+          role: selectedRole,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      })
+      .catch(function (err) {
+        showAuthError(describeAuthError(err));
+      })
+      .finally(function () {
+        submitBtn.disabled = false;
+      });
+  } else {
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(function (err) {
+        showAuthError(describeAuthError(err));
+      })
+      .finally(function () {
+        submitBtn.disabled = false;
+      });
+  }
+}
+
+function describeAuthError(err) {
+  switch (err.code) {
+    case "auth/email-already-in-use":
+      return "Email ini sudah terdaftar. Silakan masuk.";
+    case "auth/invalid-email":
+      return "Format email tidak valid.";
+    case "auth/weak-password":
+      return "Kata sandi minimal 6 karakter.";
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+      return "Email atau kata sandi salah.";
+    default:
+      return "Terjadi kesalahan: " + err.message;
+  }
+}
+
+function logout() {
+  auth.signOut();
+}
+
+function showLoginScreen() {
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("app").style.display = "none";
+  document.getElementById("authEmail").value = "";
+  document.getElementById("authPassword").value = "";
+}
+
+function loadUserProfile(user) {
+  db.collection("users").doc(user.uid).get()
+    .then(function (doc) {
+      if (!doc.exists) {
+        // Profil belum ada (kasus langka) — keluar & minta daftar ulang.
+        auth.signOut();
+        return;
+      }
+
+      const profile = doc.data();
+      currentRole = profile.role;
+      currentUserId = user.uid;
+
+      userData[currentRole] = {
+        name: profile.name,
+        initials: initialsOf(profile.name),
+        role: currentRole === "pengguna" ? "Petani Pengguna" : "Petani Mitra"
+      };
+
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("app").style.display = "block";
+
+      updateUserInterface();
+
+      if (currentRole === "mitra") {
+        activateMitraMode();
+      }
+
+      loadFarms();
+    })
+    .catch(function (err) {
+      showToast("Gagal memuat profil: " + err.message);
+    });
+}
+
+function initialsOf(name) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(function (w) { return w[0].toUpperCase(); })
+    .join("");
+}
+
+function updateUserInterface() {
+  const user = userData[currentRole];
+
+  document.getElementById("topName").textContent = user.name;
+  document.getElementById("topAvatar").textContent = user.initials;
+
+  document.getElementById("profileName").textContent = user.name;
+  document.getElementById("profileRole").textContent = user.role;
+  document.getElementById("profileAvatar").textContent = user.initials;
+
+  document.getElementById("profileNameInput").value = user.name;
+
+  document.getElementById("welcomeTitle").textContent =
+    `Selamat datang, ${user.name.split(" ")[0]}! 👋`;
+
+  if (currentRole === "mitra") {
+    document.getElementById("welcomeText").textContent =
+      "Temukan pekerjaan pertanian di sekitar Anda, kelola pekerjaan aktif, dan pantau pendapatan.";
+  }
+}
+
+function activateMitraMode() {
+  document.querySelector('[data-page="lahan"]').style.display = "none";
+
+  document.querySelector('[data-page="pekerjaan"]').innerHTML =
+    '<span class="nav-icon">📋</span> Pekerjaan Tersedia';
+
+  document.querySelector('[data-page="panen"]').innerHTML =
+    '<span class="nav-icon">💼</span> Pekerjaan Saya';
+
+  document.querySelector('[data-page="transaksi"]').innerHTML =
+    '<span class="nav-icon">💰</span> Pendapatan';
+
+  document.getElementById("page-pekerjaan").querySelector("p").textContent =
+    "Temukan pekerjaan pertanian di sekitar Anda.";
+
+  const headerButton = document
+    .getElementById("page-pekerjaan")
+    .querySelector(".btn");
+
+  headerButton.textContent = "📍 Cari Pekerjaan";
+  headerButton.onclick = function () {
+    showToast("Mencari pekerjaan di sekitar lokasi Anda...");
+  };
+
+  document.getElementById("page-panen").querySelector("h2").textContent =
+    "Pekerjaan Saya";
+
+  document.getElementById("page-panen").querySelector("p").textContent =
+    "Pekerjaan yang sedang dan telah Anda selesaikan.";
+}
+
+
+/* =====================================================
+   FORMS — Lahan (sudah terhubung Firestore),
+   Pekerjaan, Panen, Profil (masih lokal — giliran
+   berikutnya, mengikuti pola yang sama seperti Lahan).
+===================================================== */
+
+const FARM_ICONS = {
+  Sawit: "🌴", Padi: "🌾", Jagung: "🌽", Kopi: "☕",
+  Kakao: "🍫", Karet: "🌳", Sayuran: "🥬", "Buah-buahan": "🍉", Lainnya: "🌱"
+};
+
+function addFarm() {
+  const name = document.getElementById("farmName").value.trim();
+  const commodity = document.getElementById("farmCommodity").value;
+  const size = document.getElementById("farmSize").value;
+  const unit = document.getElementById("farmUnit").value;
+  const location = document.getElementById("farmLocation").value.trim();
+
+  if (!name) {
+    showToast("Nama lahan belum diisi.");
+    return;
+  }
+
+  db.collection("farms").add({
+    ownerId: currentUserId,
+    name: name,
+    commodity: commodity,
+    size: size || null,
+    unit: unit,
+    location: location || null,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  .then(function () {
     closeModal("modalLahan");
-
     document.getElementById("farmName").value = "";
-
+    document.getElementById("farmSize").value = "";
+    document.getElementById("farmLocation").value = "";
     showToast("Lahan berhasil ditambahkan.");
+  })
+  .catch(function (err) {
+    showToast("Gagal menambah lahan: " + err.message);
+  });
+}
 
-  }
+function loadFarms() {
+  if (currentRole !== "pengguna" || !currentUserId) return;
 
-
-  /* =====================================================
-     CREATE JOB
-  ===================================================== */
-
-  function createJob() {
-
-    closeModal("modalPekerjaan");
-
-    showToast(
-      currentRole === "mitra"
-        ? "Pencarian pekerjaan diperbarui."
-        : "Pekerjaan berhasil dipublikasikan."
-    );
-
-  }
-
-
-  /* =====================================================
-     SAVE HARVEST
-  ===================================================== */
-
-  function saveHarvest() {
-
-    closeModal("modalPanen");
-
-    showToast("Hasil panen berhasil dicatat.");
-
-  }
-
-
-
-
-  /* =====================================================
-     MARKETPLACE
-  ===================================================== */
-  let cart = JSON.parse(localStorage.getItem("petaniCart") || "[]");
-  let marketCategory = "all";
-
-  function marketTab(tab){
-    document.getElementById("marketProduk").style.display = tab === "produk" ? "block" : "none";
-    document.getElementById("marketJasa").style.display = tab === "jasa" ? "block" : "none";
-    document.getElementById("tabProduk").classList.toggle("active", tab === "produk");
-    document.getElementById("tabJasa").classList.toggle("active", tab === "jasa");
-  }
-
-  function filterCategory(category){
-    marketCategory = category;
-    marketTab(category === "jasa" ? "jasa" : "produk");
-    document.querySelectorAll(".product-card").forEach(card => {
-      const match = category === "all" || category === "jasa" || card.dataset.category === category;
-      card.style.display = match ? "block" : "none";
+  db.collection("farms")
+    .where("ownerId", "==", currentUserId)
+    .orderBy("createdAt", "desc")
+    .onSnapshot(renderFarms, function (err) {
+      showToast("Gagal memuat lahan: " + err.message);
     });
+}
+
+function renderFarms(snapshot) {
+  const grid = document.getElementById("farmGrid");
+  if (!grid) return;
+
+  if (snapshot.empty) {
+    grid.innerHTML = '<div class="empty-state">Belum ada lahan. Klik "+ Tambah Lahan" untuk menambahkan yang pertama.</div>';
+    return;
   }
 
-  function filterMarketplace(){
-    const q = (document.getElementById("marketSearch").value || "").toLowerCase();
-    document.querySelectorAll(".product-card").forEach(card => {
-      const text = (card.dataset.search || "").toLowerCase();
-      const categoryMatch = marketCategory === "all" || marketCategory === "jasa" || card.dataset.category === marketCategory;
-      card.style.display = categoryMatch && text.includes(q) ? "block" : "none";
-    });
+  grid.innerHTML = snapshot.docs.map(function (doc) {
+    const farm = doc.data();
+    const icon = FARM_ICONS[farm.commodity] || "🌱";
+
+    return `<div class="farm-card">
+      <div class="farm-photo">${icon}</div>
+      <div class="farm-content">
+        <h3>${escapeHtml(farm.name)}</h3>
+        <div class="farm-location">📍 ${escapeHtml(farm.location || "Lokasi belum diisi")}</div>
+        <div class="farm-info">
+          <div><small>Komoditas</small><strong>${escapeHtml(farm.commodity || "-")}</strong></div>
+          <div><small>Luas</small><strong>${farm.size ? farm.size + " " + (farm.unit === "Meter persegi" ? "m²" : "ha") : "-"}</strong></div>
+          <div><small>Status</small><strong>Aktif</strong></div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function createJob() {
+  closeModal("modalPekerjaan");
+  showToast(
+    currentRole === "mitra"
+      ? "Pencarian pekerjaan diperbarui."
+      : "Pekerjaan berhasil dipublikasikan."
+  );
+}
+
+function saveHarvest() {
+  closeModal("modalPanen");
+  showToast("Hasil panen berhasil dicatat.");
+}
+
+function saveProfile() {
+  const newName = document.getElementById("profileNameInput").value;
+
+  if (!newName) {
+    showToast("Nama belum diisi.");
+    return;
   }
 
-  function addToCart(name, price, icon){
-    const existing = cart.find(item => item.name === name);
-    if(existing) existing.qty++;
-    else cart.push({name, price, icon, qty:1});
-    localStorage.setItem("petaniCart", JSON.stringify(cart));
-    updateCartCount();
-    showToast(name + " ditambahkan ke keranjang.");
-  }
+  document.getElementById("profileName").textContent = newName;
+  document.getElementById("topName").textContent = newName;
 
-  function updateCartCount(){
-    const count = cart.reduce((sum,item)=>sum+item.qty,0);
-    const el = document.getElementById("cartCount");
-    if(el) el.textContent = count;
-  }
-
-  function formatRupiah(n){ return "Rp" + Number(n).toLocaleString("id-ID"); }
-
-  function openCart(){
-    renderCart();
-    openModal("modalCart");
-  }
-
-  function renderCart(){
-    const list = document.getElementById("cartList");
-    const totalEl = document.getElementById("cartTotal");
-    if(!cart.length){ list.innerHTML = '<div style="text-align:center;padding:25px;color:#6b7280;font-size:12px">🛒<br><br>Keranjang masih kosong.</div>'; totalEl.textContent="Rp0"; return; }
-    let total=0;
-    list.innerHTML=cart.map((item,i)=>{ total += item.price*item.qty; return `<div class="cart-item"><div class="cart-thumb">${item.icon}</div><div class="cart-item-main"><strong>${item.name}</strong><small>${formatRupiah(item.price)} × ${item.qty}</small></div><button class="btn btn-danger" onclick="removeCart(${i})">Hapus</button></div>`; }).join("");
-    totalEl.textContent=formatRupiah(total);
-  }
-
-  function removeCart(index){ cart.splice(index,1); localStorage.setItem("petaniCart",JSON.stringify(cart)); updateCartCount(); renderCart(); }
-
-  function checkoutCart(){
-    if(!cart.length){ showToast("Keranjang masih kosong."); return; }
-    closeModal("modalCart");
-    showToast("Pesanan dibuat. Lanjutkan ke transaksi untuk pembayaran.");
-  }
-
-  function createStore(){
-    const name=document.getElementById("storeName").value.trim();
-    if(!name){ showToast("Nama toko belum diisi."); return; }
-    closeModal("modalToko");
-    showToast("Toko " + name + " berhasil dibuat.");
-    showPage("toko");
-  }
-
-  function saveProduct(){
-    const name=document.getElementById("newProductName").value.trim();
-    if(!name){ showToast("Nama produk belum diisi."); return; }
-    closeModal("modalProduk");
-    document.getElementById("newProductName").value="";
-    showToast("Produk berhasil dipublikasikan.");
-  }
-
-  function saveService(){ closeModal("modalJasa"); showToast("Jasa berhasil dipublikasikan."); }
+  showToast("Profil berhasil diperbarui.");
+}
 
 
-  /* =====================================================
-     PROFILE
-  ===================================================== */
+/* =====================================================
+   MARKETPLACE — tab produk/jasa, filter, keranjang, toko.
+   TODO tahap Firebase:
+   - Produk/jasa dibaca dari Firestore collection "products"
+     & "services" (bukan card statis di HTML).
+   - Cart tetap boleh di localStorage untuk guest, tapi
+     saat checkout ditulis ke collection "orders".
+   - Field kategori/harga/foto produk mengikuti skema yang
+     sama supaya gampang ditambah kategori baru nanti.
+===================================================== */
 
-  function saveProfile() {
+function marketTab(tab) {
+  document.getElementById("marketProduk").style.display =
+    tab === "produk" ? "block" : "none";
+  document.getElementById("marketJasa").style.display =
+    tab === "jasa" ? "block" : "none";
+  document.getElementById("tabProduk").classList.toggle("active", tab === "produk");
+  document.getElementById("tabJasa").classList.toggle("active", tab === "jasa");
+}
 
-    const newName =
-      document.getElementById("profileNameInput").value;
+function filterCategory(category) {
+  marketCategory = category;
+  marketTab(category === "jasa" ? "jasa" : "produk");
+  document.querySelectorAll(".product-card").forEach(card => {
+    const match =
+      category === "all" ||
+      category === "jasa" ||
+      card.dataset.category === category;
+    card.style.display = match ? "block" : "none";
+  });
+}
 
-    if (!newName) {
-      showToast("Nama belum diisi.");
-      return;
-    }
+function filterMarketplace() {
+  const q = (document.getElementById("marketSearch").value || "").toLowerCase();
+  document.querySelectorAll(".product-card").forEach(card => {
+    const text = (card.dataset.search || "").toLowerCase();
+    const categoryMatch =
+      marketCategory === "all" ||
+      marketCategory === "jasa" ||
+      card.dataset.category === marketCategory;
+    card.style.display = categoryMatch && text.includes(q) ? "block" : "none";
+  });
+}
 
-    document.getElementById("profileName").textContent = newName;
-    document.getElementById("topName").textContent = newName;
+function addToCart(name, price, icon) {
+  const existing = cart.find(item => item.name === name);
+  if (existing) existing.qty++;
+  else cart.push({ name, price, icon, qty: 1 });
 
-    showToast("Profil berhasil diperbarui.");
-
-  }
-
-
-  /* =====================================================
-     TOAST
-  ===================================================== */
-
-  let toastTimer;
-
-  function showToast(message) {
-
-    const toast = document.getElementById("toast");
-
-    toast.textContent = message;
-
-    toast.classList.add("show");
-
-    clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(() => {
-
-      toast.classList.remove("show");
-
-    }, 2600);
-
-  }
-
-
-  /* =====================================================
-     INITIAL LOAD
-  ===================================================== */
-
+  localStorage.setItem("petaniCart", JSON.stringify(cart));
   updateCartCount();
+  showToast(name + " ditambahkan ke keranjang.");
+}
 
-  if (currentRole) {
+function updateCartCount() {
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+  const el = document.getElementById("cartCount");
+  if (el) el.textContent = count;
+}
 
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("app").style.display = "block";
+function formatRupiah(n) {
+  return "Rp" + Number(n).toLocaleString("id-ID");
+}
 
-    updateUserInterface();
+function openCart() {
+  renderCart();
+  openModal("modalCart");
+}
 
-    if (currentRole === "mitra") {
-      activateMitraMode();
-    }
+function renderCart() {
+  const list = document.getElementById("cartList");
+  const totalEl = document.getElementById("cartTotal");
 
+  if (!cart.length) {
+    list.innerHTML =
+      '<div style="text-align:center;padding:25px;color:#6b7280;font-size:12px">🛒<br><br>Keranjang masih kosong.</div>';
+    totalEl.textContent = "Rp0";
+    return;
   }
+
+  let total = 0;
+  list.innerHTML = cart
+    .map((item, i) => {
+      total += item.price * item.qty;
+      return `<div class="cart-item"><div class="cart-thumb">${item.icon}</div><div class="cart-item-main"><strong>${item.name}</strong><small>${formatRupiah(item.price)} × ${item.qty}</small></div><button class="btn btn-danger" onclick="removeCart(${i})">Hapus</button></div>`;
+    })
+    .join("");
+
+  totalEl.textContent = formatRupiah(total);
+}
+
+function removeCart(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("petaniCart", JSON.stringify(cart));
+  updateCartCount();
+  renderCart();
+}
+
+function checkoutCart() {
+  if (!cart.length) {
+    showToast("Keranjang masih kosong.");
+    return;
+  }
+  closeModal("modalCart");
+  showToast("Pesanan dibuat. Lanjutkan ke transaksi untuk pembayaran.");
+}
+
+function createStore() {
+  const name = document.getElementById("storeName").value.trim();
+  if (!name) {
+    showToast("Nama toko belum diisi.");
+    return;
+  }
+  closeModal("modalToko");
+  showToast("Toko " + name + " berhasil dibuat.");
+  showPage("toko");
+}
+
+function saveProduct() {
+  const name = document.getElementById("newProductName").value.trim();
+  if (!name) {
+    showToast("Nama produk belum diisi.");
+    return;
+  }
+  closeModal("modalProduk");
+  document.getElementById("newProductName").value = "";
+  showToast("Produk berhasil dipublikasikan.");
+}
+
+function saveService() {
+  closeModal("modalJasa");
+  showToast("Jasa berhasil dipublikasikan.");
+}
+
+
+/* =====================================================
+   FIREBASE INIT — inisialisasi app, auth, firestore,
+   dan listener status login (menggantikan pengecekan
+   localStorage yang lama).
+===================================================== */
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+auth.onAuthStateChanged(function (user) {
+  if (user) {
+    loadUserProfile(user);
+  } else {
+    showLoginScreen();
+  }
+});
+
+
+/* =====================================================
+   MAIN — dijalankan saat halaman dibuka.
+   Logika login/logout sekarang ditangani oleh
+   firebase-init.js (auth.onAuthStateChanged), jadi
+   di sini cukup siapkan bagian yang tidak butuh login.
+===================================================== */
+
+updateCartCount();
 
 </script>
 
