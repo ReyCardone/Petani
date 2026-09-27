@@ -1204,7 +1204,15 @@
         <span>Pemanen, pekerja & penyedia jasa</span>
       </button>
 
+      <button type="button" class="role-card" id="roleCardKeduanya" onclick="selectRegisterRole('keduanya')" style="grid-column:1 / -1">
+        <div class="role-icon">👨‍🌾🤝🧑‍🌾</div>
+        <strong>Pemilik Lahan & Pekerja</strong>
+        <span>Satu akun untuk mengelola lahan sekaligus menerima pekerjaan</span>
+      </button>
+
     </div>
+
+    <div id="registerRoleHint" class="demo-note" style="display:none;margin-top:8px">Satu akun dapat digunakan untuk kedua peran. Pilih “Pemilik Lahan & Pekerja” jika ingin menggunakan keduanya.</div>
 
     <button type="button" class="btn btn-primary auth-submit" id="authSubmitBtn" onclick="handleAuthSubmit()" style="margin-top:14px">
       Masuk
@@ -1313,6 +1321,8 @@
           🔔
           <span class="notification-dot"></span>
         </button>
+
+        <button class="icon-button" id="roleSwitchBtn" onclick="openRoleSwitcher()" title="Ganti peran" style="display:none">🔄</button>
 
         <div class="user-mini">
           <div class="avatar" id="topAvatar">AR</div>
@@ -2529,6 +2539,7 @@ function toggleAuthMode() {
 
   document.getElementById("registerNameField").style.display = isRegister ? "block" : "none";
   document.getElementById("registerRoleField").style.display = isRegister ? "grid" : "none";
+  document.getElementById("registerRoleHint").style.display = isRegister ? "block" : "none";
   document.getElementById("authSubmitBtn").textContent = isRegister ? "Daftar" : "Masuk";
 
   document.getElementById("authToggleNote").innerHTML = isRegister
@@ -2537,6 +2548,7 @@ function toggleAuthMode() {
 
   document.getElementById("roleCardPengguna").classList.remove("selected");
   document.getElementById("roleCardMitra").classList.remove("selected");
+  document.getElementById("roleCardKeduanya").classList.remove("selected");
   hideAuthError();
 }
 
@@ -2544,6 +2556,7 @@ function selectRegisterRole(role) {
   selectedRole = role;
   document.getElementById("roleCardPengguna").classList.toggle("selected", role === "pengguna");
   document.getElementById("roleCardMitra").classList.toggle("selected", role === "mitra");
+  document.getElementById("roleCardKeduanya").classList.toggle("selected", role === "keduanya");
 }
 
 function showAuthError(message) {
@@ -2586,10 +2599,16 @@ function handleAuthSubmit() {
 
     auth.createUserWithEmailAndPassword(email, password)
       .then(function (cred) {
+        const roles = selectedRole === "keduanya"
+          ? { pengguna: true, mitra: true }
+          : { pengguna: selectedRole === "pengguna", mitra: selectedRole === "mitra" };
+        const activeRole = selectedRole === "mitra" ? "mitra" : "pengguna";
         return db.collection("users").doc(cred.user.uid).set({
           name: name,
           email: email,
-          role: selectedRole,
+          role: activeRole,
+          activeRole: activeRole,
+          roles: roles,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       })
@@ -2608,6 +2627,78 @@ function handleAuthSubmit() {
         submitBtn.disabled = false;
       });
   }
+}
+
+function normalizedRoles(profile) {
+  if (profile.roles && typeof profile.roles === "object") {
+    return { pengguna: !!profile.roles.pengguna, mitra: !!profile.roles.mitra };
+  }
+  const legacy = profile.role === "mitra" ? "mitra" : "pengguna";
+  return { pengguna: legacy === "pengguna", mitra: legacy === "mitra" };
+}
+
+function availableRoles(profile) {
+  const r = normalizedRoles(profile);
+  return Object.keys(r).filter(k => r[k]);
+}
+
+function setRoleInterface(role) {
+  currentRole = role;
+  const btn = document.getElementById("roleSwitchBtn");
+  if (btn) btn.style.display = "inline-flex";
+  if (role === "mitra") activateMitraMode();
+  else activatePenggunaMode();
+  updateUserInterface();
+  loadJobs();
+  loadProducts();
+  if (role === "pengguna") { loadFarms(); populateJobFarms(); }
+}
+
+function openRoleSwitcher() {
+  const profile = window.__petaniProfile || {};
+  const roles = normalizedRoles(profile);
+  const choices = [];
+  if (roles.pengguna) choices.push("pengguna");
+  if (roles.mitra) choices.push("mitra");
+  if (choices.length < 2) { showToast("Akun ini baru memiliki satu peran."); return; }
+  const label = choices.map(r => r === "pengguna" ? "Pemilik Lahan" : "Pekerja / Mitra").join(" atau ");
+  const answer = prompt("Pilih mode akun:\n1 = Pemilik Lahan\n2 = Pekerja / Mitra\n\nTersedia: " + label);
+  if (answer === "1" && roles.pengguna) switchActiveRole("pengguna");
+  else if (answer === "2" && roles.mitra) switchActiveRole("mitra");
+}
+
+function switchActiveRole(role) {
+  if (!currentUserId || !window.__petaniProfile) return;
+  const roles = normalizedRoles(window.__petaniProfile);
+  if (!roles[role]) return;
+  db.collection("users").doc(currentUserId).update({ activeRole: role, role: role })
+    .then(() => {
+      window.__petaniProfile.activeRole = role;
+      window.__petaniProfile.role = role;
+      setRoleInterface(role);
+      showPage("dashboard");
+      showToast("Mode diganti menjadi " + (role === "pengguna" ? "Pemilik Lahan" : "Pekerja / Mitra") + ".");
+    })
+    .catch(e => showToast("Gagal mengganti peran: " + e.message));
+}
+
+function activatePenggunaMode() {
+  const lahan = document.querySelector('[data-page="lahan"]');
+  if (lahan) lahan.style.display = "flex";
+  const pekerjaan = document.querySelector('[data-page="pekerjaan"]');
+  if (pekerjaan) pekerjaan.innerHTML = '<span class="nav-icon">📋</span> Pekerjaan';
+  const panen = document.querySelector('[data-page="panen"]');
+  if (panen) panen.innerHTML = '<span class="nav-icon">🌾</span> Hasil Panen';
+  const transaksi = document.querySelector('[data-page="transaksi"]');
+  if (transaksi) transaksi.innerHTML = '<span class="nav-icon">💰</span> Transaksi';
+  const pg = document.getElementById("page-pekerjaan");
+  if (pg) {
+    const p = pg.querySelector("p"); if (p) p.textContent = "Kelola aktivitas pekerjaan pertanian.";
+    const b = pg.querySelector(".btn");
+    if (b) { b.textContent = "+ Buat Pekerjaan"; b.onclick = function(){ populateJobFarms(); openModal("modalPekerjaan"); }; }
+  }
+  const pp = document.getElementById("page-panen");
+  if (pp) { const h=pp.querySelector("h2"), p=pp.querySelector("p"); if(h)h.textContent="Hasil Panen"; if(p)p.textContent="Catatan hasil panen dan produksi lahan."; }
 }
 
 function describeAuthError(err) {
@@ -2683,6 +2774,14 @@ function initialsOf(name) {
 }
 
 function updateUserInterface() {
+  const profile = window.__petaniProfile || {};
+  const baseName = profile.name || (userData[currentRole] && userData[currentRole].name) || "Pengguna";
+  userData[currentRole] = {
+    name: baseName,
+    initials: initialsOf(baseName),
+    role: currentRole === "pengguna" ? "Petani Pengguna" : "Petani Mitra",
+    storeName: profile.storeName || ""
+  };
   const user = userData[currentRole];
 
   document.getElementById("topName").textContent = user.name;
@@ -2697,10 +2796,9 @@ function updateUserInterface() {
   document.getElementById("welcomeTitle").textContent =
     `Selamat datang, ${user.name.split(" ")[0]}! 👋`;
 
-  if (currentRole === "mitra") {
-    document.getElementById("welcomeText").textContent =
-      "Temukan pekerjaan pertanian di sekitar Anda, kelola pekerjaan aktif, dan pantau pendapatan.";
-  }
+  document.getElementById("welcomeText").textContent = currentRole === "mitra"
+    ? "Temukan pekerjaan pertanian di sekitar Anda, kelola pekerjaan aktif, dan pantau pendapatan."
+    : "Kelola lahan, pekerjaan, hasil panen, dan aktivitas pertanian Anda.";
 }
 
 function activateMitraMode() {
@@ -3203,15 +3301,29 @@ updateCartCount();
   };
 
   // Extend login profile initialization so all modules are connected after authentication.
-  const oldLoadUserProfile=window.loadUserProfile;
   window.loadUserProfile=function(user){
     db.collection("users").doc(user.uid).get().then(d=>{
       if(!d.exists){auth.signOut();return;}
-      const p=d.data();currentRole=p.role;currentUserId=user.uid;
-      userData[currentRole]={name:p.name||user.email,initials:initialsOf(p.name||user.email),storeName:p.storeName||"",role:currentRole==="pengguna"?"Petani Pengguna":"Petani Mitra"};
-      document.getElementById("loginScreen").style.display="none";document.getElementById("app").style.display="block";
-      updateUserInterface();loadProfileData();loadJobs();loadProducts();
-      if(currentRole==="mitra")activateMitraMode();else { loadFarms(); populateJobFarms(); }
+      const p=d.data();
+      const roles=normalizedRoles(p);
+      let active=p.activeRole || p.role || (roles.pengguna ? "pengguna" : "mitra");
+      if(!roles[active]) active=roles.pengguna ? "pengguna" : "mitra";
+      currentUserId=user.uid;
+      window.__petaniProfile={...p,roles,activeRole:active};
+      currentRole=active;
+      userData.pengguna={name:p.name||user.email,initials:initialsOf(p.name||user.email),storeName:p.storeName||"",role:"Petani Pengguna"};
+      userData.mitra={name:p.name||user.email,initials:initialsOf(p.name||user.email),storeName:p.storeName||"",role:"Petani Mitra"};
+      document.getElementById("loginScreen").style.display="none";
+      document.getElementById("app").style.display="block";
+      const hasBoth=roles.pengguna&&roles.mitra;
+      const switchBtn=document.getElementById("roleSwitchBtn");
+      if(switchBtn) switchBtn.style.display=hasBoth?"inline-flex":"none";
+      updateUserInterface();
+      loadProfileData();
+      setRoleInterface(active);
+      if(hasBoth && !p.roles){
+        db.collection("users").doc(user.uid).update({roles:roles,activeRole:active});
+      }
     }).catch(e=>showToast("Gagal memuat profil: "+e.message));
   };
 })();
