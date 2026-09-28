@@ -186,6 +186,48 @@
       grid-column: 1 / -1;
     }
 
+
+    /* ===== GOOGLE LOGIN & LOGOUT MOBILE ===== */
+    .google-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #fff;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      transition: .2s;
+    }
+    .google-btn:hover { border-color: #4285f4; box-shadow: 0 4px 14px rgba(66,133,244,.18); }
+    .google-btn:disabled { opacity: .6; cursor: wait; }
+    .google-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .setup-title { font-size: 18px; color: var(--text); margin-bottom: 4px; }
+    .setup-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    .topbar-logout { display: none; }
+    .profile-logout { margin-top: 12px; width: 100%; }
+    @media (max-width: 700px) {
+      .topbar-logout { display: inline-flex; }
+    }
+
     /* =========================
        APP LAYOUT
     ========================= */
@@ -1183,6 +1225,21 @@
 
     <div id="authError" class="auth-error" style="display:none"></div>
 
+    <!-- FORM MASUK / DAFTAR -->
+    <div id="loginStepForm">
+
+    <button type="button" class="google-btn" id="googleBtn" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      <span id="googleBtnText">Lanjutkan dengan Google</span>
+    </button>
+
+    <div class="auth-divider">atau gunakan email</div>
+
     <div id="registerNameField" style="display:none">
       <input type="text" id="authName" class="auth-input" placeholder="Nama lengkap" />
     </div>
@@ -1221,6 +1278,37 @@
     <p class="demo-note" id="authToggleNote">
       Belum punya akun? <a href="#" onclick="toggleAuthMode(); return false;">Daftar di sini</a>
     </p>
+
+    </div><!-- /loginStepForm -->
+
+    <!-- PENGGUNA GOOGLE BARU: pilih jenis akun sekali saja -->
+    <div id="loginStepRole" style="display:none">
+      <h2 class="setup-title" id="setupGreeting">Selamat datang!</h2>
+      <p class="setup-sub">Pilih jenis akun Anda. Cukup sekali, dan bisa dipakai untuk kedua peran.</p>
+
+      <div class="role-grid">
+        <button type="button" class="role-card" id="gRolePengguna" onclick="selectGoogleRole('pengguna')">
+          <div class="role-icon">👨‍🌾</div>
+          <strong>Petani Pengguna</strong>
+          <span>Petani, pemilik & pengelola lahan</span>
+        </button>
+        <button type="button" class="role-card" id="gRoleMitra" onclick="selectGoogleRole('mitra')">
+          <div class="role-icon">🧑‍🌾</div>
+          <strong>Petani Mitra</strong>
+          <span>Pemanen, pekerja & penyedia jasa</span>
+        </button>
+        <button type="button" class="role-card" id="gRoleKeduanya" onclick="selectGoogleRole('keduanya')" style="grid-column:1 / -1">
+          <div class="role-icon">👨‍🌾🤝🧑‍🌾</div>
+          <strong>Pemilik Lahan & Pekerja</strong>
+          <span>Satu akun untuk mengelola lahan sekaligus menerima pekerjaan</span>
+        </button>
+      </div>
+
+      <button type="button" class="btn btn-primary auth-submit" id="roleConfirmBtn" onclick="confirmRoleSetup()" style="margin-top:16px">
+        Lanjutkan
+      </button>
+      <p class="demo-note"><a href="#" onclick="logout(); return false;">Batal & ganti akun</a></p>
+    </div>
 
   </div>
 </div>
@@ -1323,6 +1411,8 @@
         </button>
 
         <button class="icon-button" id="roleSwitchBtn" onclick="openRoleSwitcher()" title="Ganti peran" style="display:none">🔄</button>
+
+        <button class="icon-button topbar-logout" onclick="confirmLogout()" title="Keluar" aria-label="Keluar">↪️</button>
 
         <div class="user-mini">
           <div class="avatar" id="topAvatar">AR</div>
@@ -1764,6 +1854,10 @@
 
         <button class="btn btn-primary" onclick="saveProfile()">
           Simpan Profil
+        </button>
+
+        <button class="btn btn-danger profile-logout" onclick="confirmLogout()">
+          ↪️ Keluar dari Akun
         </button>
 
       </div>
@@ -2365,6 +2459,94 @@ function handleAuthSubmit() {
   }
 }
 
+/* ---------- LOGIN / DAFTAR DENGAN GOOGLE ---------- */
+let googleRole = null;
+window.__pendingGoogleUser = null;
+
+function setGoogleBusy(busy) {
+  const btn = document.getElementById("googleBtn");
+  if (!btn) return;
+  btn.disabled = busy;
+  document.getElementById("googleBtnText").textContent = busy ? "Menghubungkan ke Google…" : "Lanjutkan dengan Google";
+}
+
+function signInWithGoogle() {
+  hideAuthError();
+  setGoogleBusy(true);
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+
+  auth.signInWithPopup(provider)
+    .catch(function (err) {
+      if (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment") {
+        return auth.signInWithRedirect(provider);
+      }
+      if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") return;
+      showAuthError(describeAuthError(err));
+    })
+    .finally(function () { setGoogleBusy(false); });
+}
+
+window.__handleRedirect = function () {
+  auth.getRedirectResult().catch(function (err) {
+    if (err && err.code) showAuthError(describeAuthError(err));
+  });
+};
+
+function selectGoogleRole(role) {
+  googleRole = role;
+  document.getElementById("gRolePengguna").classList.toggle("selected", role === "pengguna");
+  document.getElementById("gRoleMitra").classList.toggle("selected", role === "mitra");
+  document.getElementById("gRoleKeduanya").classList.toggle("selected", role === "keduanya");
+}
+
+/* Akun Google baru: pilih jenis akun sekali saja */
+function showRoleSetup(user) {
+  window.__pendingGoogleUser = user;
+  googleRole = null;
+  ["gRolePengguna", "gRoleMitra", "gRoleKeduanya"].forEach(function (id) {
+    document.getElementById(id).classList.remove("selected");
+  });
+  const first = (user.displayName || user.email || "").split(" ")[0];
+  document.getElementById("setupGreeting").textContent = "Halo, " + first + "! 👋";
+  document.getElementById("loginStepForm").style.display = "none";
+  document.getElementById("loginStepRole").style.display = "block";
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("app").style.display = "none";
+}
+
+function confirmRoleSetup() {
+  hideAuthError();
+  const user = window.__pendingGoogleUser || auth.currentUser;
+  if (!user) { showAuthError("Sesi login tidak ditemukan. Silakan masuk lagi."); return; }
+  if (!googleRole) { showAuthError("Pilih jenis akun terlebih dahulu."); return; }
+
+  const btn = document.getElementById("roleConfirmBtn");
+  btn.disabled = true;
+
+  const roles = googleRole === "keduanya"
+    ? { pengguna: true, mitra: true }
+    : { pengguna: googleRole === "pengguna", mitra: googleRole === "mitra" };
+  const activeRole = googleRole === "mitra" ? "mitra" : "pengguna";
+
+  db.collection("users").doc(user.uid).set({
+    name: user.displayName || (user.email || "Pengguna").split("@")[0],
+    email: user.email || "",
+    photoURL: user.photoURL || "",
+    role: activeRole,
+    activeRole: activeRole,
+    roles: roles,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function () {
+    window.__pendingGoogleUser = null;
+    window.loadUserProfile(user);
+  }).catch(function (err) {
+    showAuthError("Gagal menyimpan akun: " + err.message);
+  }).finally(function () {
+    btn.disabled = false;
+  });
+}
+
 function normalizedRoles(profile) {
   if (profile.roles && typeof profile.roles === "object") {
     return { pengguna: !!profile.roles.pengguna, mitra: !!profile.roles.mitra };
@@ -2481,13 +2663,26 @@ function describeAuthError(err) {
     case "auth/wrong-password":
     case "auth/invalid-credential":
       return "Email atau kata sandi salah.";
+    case "auth/unauthorized-domain":
+      return "Domain website ini belum diizinkan di Firebase (Authentication > Settings > Authorized domains).";
+    case "auth/operation-not-allowed":
+      return "Login Google belum diaktifkan di Firebase Console (Authentication > Sign-in method > Google).";
+    case "auth/network-request-failed":
+      return "Koneksi internet bermasalah. Coba lagi.";
+    case "auth/account-exists-with-different-credential":
+      return "Email ini sudah terdaftar dengan metode login lain.";
     default:
-      return "Terjadi kesalahan: " + err.message;
+      return "Terjadi kesalahan: " + (err.message || err.code);
   }
 }
 
 function logout() {
+  window.__pendingGoogleUser = null;
   auth.signOut();
+}
+
+function confirmLogout() {
+  if (confirm("Keluar dari akun PETANI?")) logout();
 }
 
 function showLoginScreen() {
@@ -2495,14 +2690,17 @@ function showLoginScreen() {
   document.getElementById("app").style.display = "none";
   document.getElementById("authEmail").value = "";
   document.getElementById("authPassword").value = "";
+  document.getElementById("loginStepForm").style.display = "block";
+  document.getElementById("loginStepRole").style.display = "none";
+  hideAuthError();
+  setGoogleBusy(false);
 }
 
 function loadUserProfile(user) {
   db.collection("users").doc(user.uid).get()
     .then(function (doc) {
       if (!doc.exists) {
-        // Profil belum ada (kasus langka) — keluar & minta daftar ulang.
-        auth.signOut();
+        showRoleSetup(user);
         return;
       }
 
@@ -2864,6 +3062,8 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+window.__handleRedirect();
+
 auth.onAuthStateChanged(function (user) {
   if (user) {
     loadUserProfile(user);
@@ -3172,7 +3372,7 @@ updateCartCount();
   // Extend login profile initialization so all modules are connected after authentication.
   window.loadUserProfile=function(user,tries){
     db.collection("users").doc(user.uid).get().then(d=>{
-      if(!d.exists){ if(window.__registering&&(tries||0)<8){setTimeout(()=>window.loadUserProfile(user,(tries||0)+1),600);return;} auth.signOut();return;}
+      if(!d.exists){ if(window.__registering&&(tries||0)<8){setTimeout(()=>window.loadUserProfile(user,(tries||0)+1),600);return;} showRoleSetup(user);return;}
       const p=d.data();
       const roles=normalizedRoles(p);
       let active=p.activeRole || p.role || (roles.pengguna ? "pengguna" : "mitra");
