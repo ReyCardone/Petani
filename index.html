@@ -2643,26 +2643,11 @@ function availableRoles(profile) {
 }
 
 function setRoleInterface(role) {
-  const profile = window.__petaniProfile || {};
-  const roles = normalizedRoles(profile);
-  if (!roles[role]) return;
-
-  // Hentikan listener lama sebelum mengganti konteks peran.
-  if (window.__jobUnsub) { window.__jobUnsub(); window.__jobUnsub = null; }
-  if (window.__farmUnsub && role === "mitra") { window.__farmUnsub(); window.__farmUnsub = null; }
-
   currentRole = role;
-  profile.activeRole = role;
-  profile.role = role;
-  window.__petaniProfile = profile;
-
   const btn = document.getElementById("roleSwitchBtn");
-  if (btn) { btn.style.display = (roles.pengguna && roles.mitra) ? "inline-flex" : "none"; btn.title = role === "pengguna" ? "Beralih ke Pekerja / Mitra" : "Beralih ke Pemilik Lahan"; }
-
-  // Kembalikan elemen menu ke mode yang sesuai setiap kali berpindah peran.
+  if (btn) btn.style.display = "inline-flex";
   if (role === "mitra") activateMitraMode();
   else activatePenggunaMode();
-
   updateUserInterface();
   loadJobs();
   loadProducts();
@@ -2672,47 +2657,29 @@ function setRoleInterface(role) {
 function openRoleSwitcher() {
   const profile = window.__petaniProfile || {};
   const roles = normalizedRoles(profile);
-  if (!(roles.pengguna && roles.mitra)) {
-    showToast("Akun ini baru memiliki satu peran.");
-    return;
-  }
-
-  // Tombol berfungsi sebagai toggle langsung: lebih stabil daripada prompt
-  // dan tidak bergantung pada urutan pilihan.
-  const nextRole = currentRole === "pengguna" ? "mitra" : "pengguna";
-  switchActiveRole(nextRole);
+  const choices = [];
+  if (roles.pengguna) choices.push("pengguna");
+  if (roles.mitra) choices.push("mitra");
+  if (choices.length < 2) { showToast("Akun ini baru memiliki satu peran."); return; }
+  const label = choices.map(r => r === "pengguna" ? "Pemilik Lahan" : "Pekerja / Mitra").join(" atau ");
+  const answer = prompt("Pilih mode akun:\n1 = Pemilik Lahan\n2 = Pekerja / Mitra\n\nTersedia: " + label);
+  if (answer === "1" && roles.pengguna) switchActiveRole("pengguna");
+  else if (answer === "2" && roles.mitra) switchActiveRole("mitra");
 }
 
 function switchActiveRole(role) {
-  if (!currentUserId || !window.__petaniProfile) {
-    showToast("Sesi pengguna belum siap.");
-    return;
-  }
+  if (!currentUserId || !window.__petaniProfile) return;
   const roles = normalizedRoles(window.__petaniProfile);
-  if (!roles[role]) {
-    showToast("Peran tersebut belum aktif pada akun ini.");
-    return;
-  }
-
-  const btn = document.getElementById("roleSwitchBtn");
-  if (btn) btn.disabled = true;
-
-  db.collection("users").doc(currentUserId).update({
-    activeRole: role,
-    role: role,
-    roles: roles
-  }).then(() => {
-    window.__petaniProfile.activeRole = role;
-    window.__petaniProfile.role = role;
-    window.__petaniProfile.roles = roles;
-    setRoleInterface(role);
-    showPage("dashboard");
-    showToast("Mode diganti menjadi " + (role === "pengguna" ? "Pemilik Lahan" : "Pekerja / Mitra") + ".");
-  }).catch(e => {
-    showToast("Gagal mengganti peran: " + e.message);
-  }).finally(() => {
-    if (btn) btn.disabled = false;
-  });
+  if (!roles[role]) return;
+  db.collection("users").doc(currentUserId).update({ activeRole: role, role: role })
+    .then(() => {
+      window.__petaniProfile.activeRole = role;
+      window.__petaniProfile.role = role;
+      setRoleInterface(role);
+      showPage("dashboard");
+      showToast("Mode diganti menjadi " + (role === "pengguna" ? "Pemilik Lahan" : "Pekerja / Mitra") + ".");
+    })
+    .catch(e => showToast("Gagal mengganti peran: " + e.message));
 }
 
 function activatePenggunaMode() {
@@ -3257,96 +3224,24 @@ updateCartCount();
   function renderJobsFixed(s){
     const grid=document.getElementById("jobGrid"); if(!grid)return;
     let jobs=s.docs.map(d=>({id:d.id,...d.data()}));
-    if(currentRole==="mitra") jobs=jobs.filter(j=>!["Dibatalkan","Selesai"].includes(j.status));
+    if(currentRole==="mitra")jobs=jobs.filter(j=>!["Dibatalkan","Selesai"].includes(j.status));
     jobs.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
     const active=jobs.filter(j=>!["Dibatalkan","Selesai"].includes(j.status)).length;
-    const stat=document.getElementById("statJobCount"); if(stat)stat.textContent=active;
-
+    const stat=document.getElementById("statJobCount");if(stat)stat.textContent=active;
     const summary=document.getElementById("dashboardJobSummary");
     if(summary)summary.innerHTML=jobs.slice(0,4).map(j=>`<div class="list-item"><div class="list-main"><div class="list-icon">📋</div><div><strong>${esc(j.type||"Pekerjaan")}</strong><small>${esc(j.location||"Lahan")} • ${esc(j.status||"-")}</small></div></div><span class="badge info">${num(j.progress)}%</span></div>`).join("")||'<div class="empty-state">Belum ada pekerjaan aktif.</div>';
-
-    if(!jobs.length){
-      grid.innerHTML=currentRole==="mitra"
-        ? '<div class="empty-state">Belum ada pekerjaan tersedia untuk diambil.</div>'
-        : '<div class="empty-state">Belum ada pekerjaan. Klik "+ Buat Pekerjaan" untuk menambahkan.</div>';
-      return;
-    }
-
+    if(!jobs.length){grid.innerHTML='<div class="empty-state">Belum ada pekerjaan. Klik "+ Buat Pekerjaan" untuk menambahkan.</div>';return;}
     grid.innerHTML=jobs.map(j=>{
       const p=Math.max(0,Math.min(100,num(j.progress)));
-      const badge=j.status==="Berjalan"?"info":j.status==="Selesai"?"success":j.status==="Dibatalkan"?"danger":j.status==="Menunggu"?"warning":"warning";
+      const badge=j.status==="Berjalan"?"info":j.status==="Selesai"?"success":j.status==="Dibatalkan"?"danger":"warning";
       const own=currentRole==="pengguna"&&j.ownerId===currentUserId;
-      const workerIds=Array.isArray(j.workerIds)?j.workerIds:(j.workerId?[j.workerId]:[]);
-      const isWorker=workerIds.includes(currentUserId);
-      const maxWorkers=Math.max(1,num(j.workers)||1);
-      const workerCount=workerIds.length;
-      let workerActions="";
-
-      if(currentRole==="mitra") {
-        if(!isWorker && workerCount < maxWorkers && !["Selesai","Dibatalkan"].includes(j.status)) {
-          workerActions=`<div class="owner-actions"><button class="btn btn-primary" onclick="takeJobFixed('${j.id}')">Ambil Pekerjaan</button></div>`;
-        } else if(isWorker) {
-          workerActions=`<div class="owner-actions">
-            <button class="btn btn-primary" onclick="processJobFixed('${j.id}')" ${j.status==="Berjalan"?"disabled":""}>▶ Proses</button>
-            <button class="btn btn-outline" onclick="waitJobFixed('${j.id}')" ${j.status==="Menunggu"?"disabled":""}>⏸ Tunggu</button>
-          </div>`;
-        }
-      }
-
       return `<div class="job-card"><div class="job-top"><div class="job-title"><div class="job-icon">📋</div><div><h3>${esc(j.type||"Pekerjaan")}</h3><p>${esc(j.location||"Lahan")}</p></div></div><span class="badge ${badge}">${esc(j.status||"Mencari Mitra")}</span></div>
-      <div class="job-details"><div class="job-detail"><span>📅 Tanggal</span>${esc(j.startDate||"-")}</div><div class="job-detail"><span>👥 Pekerja</span>${workerCount}/${maxWorkers} orang</div><div class="job-detail"><span>📍 Lokasi</span>${esc(j.location||"-")}</div><div class="job-detail"><span>⏱️ Durasi</span>${esc(j.duration||"-")}</div></div>
+      <div class="job-details"><div class="job-detail"><span>📅 Tanggal</span>${esc(j.startDate||"-")}</div><div class="job-detail"><span>👥 Pekerja</span>${esc(j.workers||"-")} orang</div><div class="job-detail"><span>📍 Lokasi</span>${esc(j.location||"-")}</div><div class="job-detail"><span>⏱️ Durasi</span>${esc(j.duration||"-")}</div></div>
       <div class="job-bottom"><span class="salary">${esc(j.wage||"-")}</span><span style="font-size:10px;color:var(--muted)">Progres ${p}%</span></div>
       <div class="progress-wrap"><div class="progress-bar"><span style="width:${p}%"></span></div></div>
-      ${own?`<div class="owner-actions"><button class="btn btn-outline" onclick="editJobFixed('${j.id}')">Edit</button><button class="btn btn-danger" onclick="deleteJobFixed('${j.id}')">Hapus</button>${!["Dibatalkan","Selesai"].includes(j.status)?`<button class="btn btn-outline" onclick="cancelJobFixed('${j.id}')">Urungkan</button>`:""}</div>`:""}
-      ${workerActions}</div>`;
+      ${own?`<div class="owner-actions"><button class="btn btn-outline" onclick="editJobFixed('${j.id}')">Edit</button><button class="btn btn-danger" onclick="deleteJobFixed('${j.id}')">Hapus</button>${!["Dibatalkan","Selesai"].includes(j.status)?`<button class="btn btn-outline" onclick="cancelJobFixed('${j.id}')">Urungkan</button>`:""}</div>`:""}</div>`;
     }).join("");
   }
-
-  // Alur pekerja: ambil -> proses / tunggu. Semua perubahan langsung disimpan
-  // ke dokumen pekerjaan sehingga pemilik lahan melihat status yang sama secara realtime.
-  window.takeJobFixed=function(id){
-    if(currentRole!=="mitra"||!currentUserId)return;
-    const ref=db.collection("jobs").doc(id);
-    ref.get().then(d=>{
-      if(!d.exists)throw new Error("Pekerjaan tidak ditemukan.");
-      const j=d.data();
-      if(["Selesai","Dibatalkan"].includes(j.status))throw new Error("Pekerjaan sudah ditutup.");
-      const ids=Array.isArray(j.workerIds)?j.workerIds:(j.workerId?[j.workerId]:[]);
-      const max=Math.max(1,num(j.workers)||1);
-      if(ids.includes(currentUserId)){showToast("Pekerjaan ini sudah Anda ambil.");return;}
-      if(ids.length>=max){showToast("Kuota pekerja untuk pekerjaan ini sudah penuh.");return;}
-      const name=(userData.mitra||{}).name||((window.__petaniProfile||{}).name)||"Pekerja";
-      return ref.update({
-        workerIds:firebase.firestore.FieldValue.arrayUnion(currentUserId),
-        workerNames:firebase.firestore.FieldValue.arrayUnion(name),
-        status:"Diambil",
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }).then(r=>{if(r!==undefined)showToast("Pekerjaan berhasil diambil.");}).catch(e=>showToast("Gagal mengambil pekerjaan: "+e.message));
-  };
-
-  window.processJobFixed=function(id){
-    if(currentRole!=="mitra"||!currentUserId)return;
-    const ref=db.collection("jobs").doc(id);
-    ref.get().then(d=>{
-      if(!d.exists)throw new Error("Pekerjaan tidak ditemukan.");
-      const j=d.data(),ids=Array.isArray(j.workerIds)?j.workerIds:(j.workerId?[j.workerId]:[]);
-      if(!ids.includes(currentUserId))throw new Error("Ambil pekerjaan terlebih dahulu.");
-      return ref.update({status:"Berjalan",progress:Math.max(25,num(j.progress)),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-    }).then(()=>showToast("Pekerjaan mulai diproses.")).catch(e=>showToast("Gagal memproses pekerjaan: "+e.message));
-  };
-
-  window.waitJobFixed=function(id){
-    if(currentRole!=="mitra"||!currentUserId)return;
-    const ref=db.collection("jobs").doc(id);
-    ref.get().then(d=>{
-      if(!d.exists)throw new Error("Pekerjaan tidak ditemukan.");
-      const j=d.data(),ids=Array.isArray(j.workerIds)?j.workerIds:(j.workerId?[j.workerId]:[]);
-      if(!ids.includes(currentUserId))throw new Error("Ambil pekerjaan terlebih dahulu.");
-      return ref.update({status:"Menunggu",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-    }).then(()=>showToast("Status pekerjaan diubah menjadi menunggu.")).catch(e=>showToast("Gagal mengubah status: "+e.message));
-  };
-
 
   window.deleteJobFixed=id=>{if(!confirm("Hapus pekerjaan ini?"))return;db.collection("jobs").doc(id).delete().then(()=>showToast("Pekerjaan dihapus.")).catch(e=>showToast("Gagal menghapus pekerjaan: "+e.message));};
   window.cancelJobFixed=id=>db.collection("jobs").doc(id).update({status:"Dibatalkan",updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>showToast("Pekerjaan diurungkan.")).catch(e=>showToast("Gagal mengurungkan pekerjaan: "+e.message));
@@ -3450,8 +3345,9 @@ updateCartCount();
       const hasBoth=roles.pengguna&&roles.mitra;
       const switchBtn=document.getElementById("roleSwitchBtn");
       if(switchBtn) switchBtn.style.display=hasBoth?"inline-flex":"none";
-      setRoleInterface(active);
+      updateUserInterface();
       loadProfileData();
+      setRoleInterface(active);
       if(hasBoth && !p.roles){
         db.collection("users").doc(user.uid).update({roles:roles,activeRole:active});
       }
