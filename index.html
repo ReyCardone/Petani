@@ -2304,7 +2304,7 @@
 
       <div class="form-group">
         <label>Komoditas</label>
-        <select id="jobCommodity">
+        <select id="harvestCommodity">
           <option>Sawit</option>
           <option>Padi</option>
           <option>Jagung</option>
@@ -3171,17 +3171,20 @@ updateCartCount();
   };
 
   // Replace the no-op job creator with real Firestore storage.
-  function populateJobFarms(){
+  function populateJobFarms(selectedId){
     const sel=document.getElementById("jobFarmId");
-    if(!sel || !currentUserId || currentRole!=="pengguna")return;
-    db.collection("farms").where("ownerId","==",currentUserId).get().then(s=>{
-      const current=sel.value;
+    if(!sel || !currentUserId || currentRole!=="pengguna")return Promise.resolve();
+    return db.collection("farms").where("ownerId","==",currentUserId).get().then(s=>{
+      const current=(selectedId!==undefined)?selectedId:sel.value;
       sel.innerHTML='<option value="">Pilih lahan...</option>'+s.docs.map(d=>{
         const f=d.data(); return `<option value="${d.id}" data-name="${esc(f.name)}" data-commodity="${esc(f.commodity||"Sawit")}">${esc(f.name)} — ${esc(f.commodity||"-")}</option>`;
       }).join("");
       if(current)sel.value=current;
-    });
+    }).catch(e=>showToast("Gagal memuat daftar lahan: "+e.message));
   }
+  // Dipanggil juga dari luar blok ini (setRoleInterface / tombol "+ Buat Pekerjaan"),
+  // jadi harus diekspor ke window supaya tidak "is not defined".
+  window.populateJobFarms=populateJobFarms;
 
   window.createJob=function(){
     if(!currentUserId){showToast("Sesi pengguna belum siap.");return;}
@@ -3220,7 +3223,8 @@ updateCartCount();
 
   function renderJobsFixed(s){
     const grid=document.getElementById("jobGrid"); if(!grid)return;
-    const jobs=s.docs.map(d=>({id:d.id,...d.data()}));
+    let jobs=s.docs.map(d=>({id:d.id,...d.data()}));
+    if(currentRole==="mitra")jobs=jobs.filter(j=>!["Dibatalkan","Selesai"].includes(j.status));
     jobs.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
     const active=jobs.filter(j=>!["Dibatalkan","Selesai"].includes(j.status)).length;
     const stat=document.getElementById("statJobCount");if(stat)stat.textContent=active;
@@ -3246,9 +3250,9 @@ updateCartCount();
     db.collection("jobs").doc(id).get().then(d=>{
       if(!d.exists)return;const j=d.data(),v=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val||""};
       v("jobCommodity",j.commodity);v("jobType",j.type);v("jobStartDate",j.startDate);v("jobDuration",j.duration);v("jobWorkers",j.workers);v("jobWage",j.wage);v("jobLocation",j.location);v("jobDescription",j.description);
-      populateJobFarms();
-      setTimeout(()=>{const fs=document.getElementById("jobFarmId");if(fs)fs.value=j.farmId||"";},250);
-      const b=document.querySelector('#modalPekerjaan .btn.btn-primary');b.textContent="Simpan Perubahan";b.onclick=()=>updateJobFixed(id);openModal("modalPekerjaan");
+      populateJobFarms(j.farmId||"");
+      const b=document.querySelector('#modalPekerjaan .btn.btn-primary');b.textContent="Simpan Perubahan";b.onclick=()=>updateJobFixed(id);
+      window.__editingModal="modalPekerjaan";openModal("modalPekerjaan");
     });
   };
   window.updateJobFixed=function(id){
@@ -3275,7 +3279,7 @@ updateCartCount();
     db.collection("products").add({ownerId:currentUserId,ownerName:(userData[currentRole]||{}).name||"",name:v("newProductName").trim(),category:v("newProductCategory"),price:num(v("newProductPrice")),stock:num(v("newProductStock")),unit:v("newProductUnit")||"unit",description:v("newProductDescription"),icon:"🌱",active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{closeModal("modalProduk");showPage("toko");showToast("Produk berhasil dipublikasikan dan tampil di Toko Saya.");}).catch(e=>showToast("Gagal menyimpan produk: "+e.message));
   };
   window.editProductFixed=function(id){
-    db.collection("products").doc(id).get().then(d=>{if(!d.exists)return;const p=d.data(),v=(i,x)=>{const e=document.getElementById(i);if(e)e.value=x??""};v("newProductName",p.name);v("newProductCategory",p.category);v("newProductPrice",p.price);v("newProductStock",p.stock);v("newProductUnit",p.unit);v("newProductDescription",p.description);const b=document.querySelector('#modalProduk .btn.btn-primary');b.textContent="Simpan Perubahan";b.onclick=()=>updateProductFixed(id);openModal("modalProduk");});
+    db.collection("products").doc(id).get().then(d=>{if(!d.exists)return;const p=d.data(),v=(i,x)=>{const e=document.getElementById(i);if(e)e.value=x??""};v("newProductName",p.name);v("newProductCategory",p.category);v("newProductPrice",p.price);v("newProductStock",p.stock);v("newProductUnit",p.unit);v("newProductDescription",p.description);const b=document.querySelector('#modalProduk .btn.btn-primary');b.textContent="Simpan Perubahan";b.onclick=()=>updateProductFixed(id);window.__editingModal="modalProduk";openModal("modalProduk");});
   };
   window.updateProductFixed=function(id){
     const v=i=>document.getElementById(i)?.value||"";
@@ -3283,6 +3287,29 @@ updateCartCount();
   };
   function resetProductButton(){const b=document.querySelector('#modalProduk .btn.btn-primary');if(b){b.textContent="Publikasikan Produk";b.onclick=window.saveProduct;}}
   window.deleteProductFixed=id=>{if(!confirm("Hapus produk ini dari Toko Saya?"))return;db.collection("products").doc(id).delete().then(()=>showToast("Produk dihapus.")).catch(e=>showToast("Gagal menghapus produk: "+e.message));};
+
+  // Modal Pekerjaan/Produk selalu dibuka dalam mode "buat baru" (form bersih, tombol Publikasikan),
+  // kecuali dibuka lewat tombol Edit. Mencegah tombol "Simpan Perubahan" lama menimpa data lama.
+  function resetJobForm(){
+    ["jobStartDate","jobDuration","jobWorkers","jobWage","jobLocation","jobDescription"].forEach(i=>{const e=document.getElementById(i);if(e)e.value="";});
+    resetJobButton();
+  }
+  function resetProductForm(){
+    ["newProductName","newProductPrice","newProductStock","newProductUnit","newProductDescription"].forEach(i=>{const e=document.getElementById(i);if(e)e.value="";});
+    resetProductButton();
+  }
+  (function(){
+    const baseOpen=window.openModal;
+    window.openModal=function(id){
+      const editing=window.__editingModal===id;
+      window.__editingModal=null;
+      if(!editing){
+        if(id==="modalPekerjaan"){resetJobForm();populateJobFarms();}
+        else if(id==="modalProduk"){resetProductForm();}
+      }
+      return baseOpen(id);
+    };
+  })();
 
   // Profile persisted to users/{uid}.
   window.loadProfileData=function(){
