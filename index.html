@@ -2115,6 +2115,10 @@
 
 <div class="modal-overlay" id="modalCheckout"><div class="modal"><div class="modal-header"><div><h3>Checkout</h3><p style="font-size:11px;color:#6b7280;margin-top:3px;">Periksa pesanan, alamat, dan metode pembayaran.</p></div><button class="close-modal" onclick="closeModal('modalCheckout')">✕</button></div><div class="cart-list" id="coSummary"></div><div class="cart-total"><span>Total</span><span id="coTotal">Rp0</span></div><div class="form-grid" style="margin-top:12px"><div class="form-group full"><label>Alamat Pengiriman</label><textarea id="coAddress" placeholder="Alamat lengkap penerima..."></textarea></div><div class="form-group full"><label>Metode Pembayaran</label><select id="coMethod"><option>Transfer Bank</option><option>QRIS</option><option>E-Wallet</option></select></div></div><p style="font-size:10px;color:#6b7280;margin-top:8px">Pembayaran masih simulasi status (belum payment gateway). Pesanan dipisah otomatis per penjual.</p><br><button class="btn btn-primary" id="coBtn" style="width:100%" onclick="confirmCheckout()">Buat Pesanan</button></div></div>
 
+<div class="modal-overlay" id="modalShip"><div class="modal"><div class="modal-header"><div><h3>Kirim Pesanan</h3><p style="font-size:11px;color:#6b7280;margin-top:3px;">Isi jasa pengiriman dan nomor resi agar pembeli bisa melacak.</p></div><button class="close-modal" onclick="closeModal('modalShip')">✕</button></div><p id="shipItems" style="font-size:12px;font-weight:600"></p><p id="shipInfo" style="font-size:11px;color:#6b7280;margin:4px 0 10px"></p><div class="form-grid"><div class="form-group full"><label>Jasa Pengiriman</label><select id="shipCourier"></select></div><div class="form-group full"><label>Nomor Resi</label><input id="shipResi" placeholder="Contoh: JP1234567890 (kosongkan jika antar langsung)"></div></div><p id="shipResiHint" style="display:none"></p><br><button class="btn btn-primary" id="shipBtn" style="width:100%" onclick="confirmShip()">Konfirmasi Pengiriman</button></div></div>
+
+<div class="modal-overlay" id="modalOrder"><div class="modal"><div class="modal-header"><div><h3 id="odTitle">Detail Pesanan</h3><p style="font-size:11px;color:#6b7280;margin-top:3px;">Rincian dan riwayat status pesanan.</p></div><button class="close-modal" onclick="closeModal('modalOrder')">✕</button></div><div id="odBody"></div></div></div>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
@@ -2431,7 +2435,6 @@ function switchActiveRole(role) {
 
   db.collection("users").doc(currentUserId).update({
     activeRole: role,
-    role: role,
     roles: roles
   }).then(() => {
     window.__petaniProfile.activeRole = role;
@@ -3194,6 +3197,7 @@ updateCartCount();
 })();
 
 
+
 /* =====================================================
    MARKETPLACE & TRANSAKSI — data nyata dari Firestore
    products -> marketplace -> keranjang -> checkout -> orders
@@ -3211,7 +3215,10 @@ updateCartCount();
   const fmtDate=t=>{const d=t&&t.toDate?t.toDate():null;return d?d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}):"-";};
   const oid=o=>"#"+o.id.slice(-6).toUpperCase();
   const names=o=>(o.items||[]).map(i=>i.name+" ×"+i.qty).join(", ");
-  let market={}, buyOrders=[], sellOrders=[], unsubs=[];
+  let market={}, buyOrders=[], sellOrders=[], unsubs=[], lastRows=[], shipOrderId=null;
+  const KURIR=["JNE","J&T","SiCepat","POS Indonesia","Antar Langsung (kurir toko)"];
+  const OWN_COURIER=KURIR[KURIR.length-1];
+  const fmtDT=t=>{const d=t&&t.toDate?t.toDate():null;return d?d.toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";};
 
   /* ---------- Keranjang: dipisah per akun (UID) ---------- */
   const cartKey=()=>"petaniCart_"+(currentUserId||"guest");
@@ -3328,17 +3335,63 @@ updateCartCount();
 
   /* ---------- Alur status pesanan ---------- */
   // pembeli: bayar, batalkan (hanya saat menunggu), terima | penjual: proses, kirim
-  const FLOW={pay:["dibayar","menunggu_pembayaran","buyerId"],receive:["selesai","dikirim","buyerId"],process:["diproses","dibayar","sellerId"],ship:["dikirim","diproses","sellerId"]};
+  const FLOW={pay:["dibayar","menunggu_pembayaran","buyerId","paidAt"],receive:["selesai","dikirim","buyerId","receivedAt"],process:["diproses","dibayar","sellerId","processedAt"]};
   window.orderAction=function(id,act){
     if(act==="cancel")return cancelOrder(id);
+    if(act==="ship")return openShip(id);
     const f=FLOW[act];if(!f)return;const ref=db.collection("orders").doc(id);
     db.runTransaction(tx=>tx.get(ref).then(d=>{
       if(!d.exists)throw new Error("Pesanan tidak ditemukan.");
       const o=d.data();
       if(o[f[2]]!==currentUserId)throw new Error("Anda tidak berwenang atas aksi ini.");
       if(o.status!==f[1])throw new Error("Status pesanan sudah berubah, muat ulang.");
-      tx.update(ref,{status:f[0],updatedAt:TS()});
+      tx.update(ref,{status:f[0],[f[3]]:TS(),updatedAt:TS()});
     })).then(()=>showToast("Status pesanan: "+ST[f[0]][0]+".")).catch(e=>showToast("Gagal memperbarui pesanan: "+e.message));
+  };
+
+  /* ---------- Pengiriman: penjual mengisi kurir & resi ---------- */
+  function openShip(id){
+    const o=sellOrders.find(x=>x.id===id);if(!o){showToast("Pesanan tidak ditemukan.");return;}
+    shipOrderId=id;
+    document.getElementById("shipCourier").innerHTML=KURIR.map(k=>`<option>${esc(k)}</option>`).join("");
+    document.getElementById("shipResi").value="";
+    setT("shipInfo","Kirim ke: "+(o.buyerName||"Pembeli")+" — "+(o.address||"-"));
+    setT("shipItems",names(o));
+    document.getElementById("shipResiHint").style.display="none";
+    openModal("modalShip");
+  }
+  window.confirmShip=function(){
+    const courier=document.getElementById("shipCourier").value,resi=document.getElementById("shipResi").value.trim();
+    if(!shipOrderId)return;
+    if(courier!==OWN_COURIER&&resi.length<4){showToast("Nomor resi wajib diisi (minimal 4 karakter).");return;}
+    const ref=db.collection("orders").doc(shipOrderId),btn=document.getElementById("shipBtn");btn.disabled=true;
+    db.runTransaction(tx=>tx.get(ref).then(d=>{
+      if(!d.exists)throw new Error("Pesanan tidak ditemukan.");
+      const o=d.data();
+      if(o.sellerId!==currentUserId)throw new Error("Anda tidak berwenang atas pesanan ini.");
+      if(o.status!=="diproses")throw new Error("Status pesanan sudah berubah, muat ulang.");
+      tx.update(ref,{status:"dikirim",courier:courier,trackingNumber:resi||"-",shippedAt:TS(),updatedAt:TS()});
+    })).then(()=>{closeModal("modalShip");shipOrderId=null;showToast("Pesanan dikirim. Pembeli akan diminta konfirmasi saat barang tiba.");})
+      .catch(e=>showToast("Gagal mengirim pesanan: "+e.message)).finally(()=>{btn.disabled=false;});
+  };
+  function shipLine(o){
+    if(!o.courier)return "";
+    return `<br><small>🚚 ${esc(o.courier)}${o.trackingNumber&&o.trackingNumber!=="-"?" • Resi: <strong>"+esc(o.trackingNumber)+"</strong>":""}</small>`;
+  }
+
+  /* ---------- Detail pesanan + linimasa status ---------- */
+  window.orderDetail=function(id){
+    const o=lastRows.find(x=>x.id===id);if(!o){showToast("Pesanan tidak ditemukan.");return;}
+    const buy=o.kind==="beli",st=ST[o.status]||[o.status,"info"];
+    setT("odTitle","Pesanan "+oid(o));
+    const step=(ic,t,ts,extra)=>ts?`<div class="list-item"><div class="list-main"><div class="list-icon">${ic}</div><div><strong>${t}</strong><small>${fmtDT(ts)}${extra||""}</small></div></div><span class="badge success">✓</span></div>`:`<div class="list-item" style="opacity:.45"><div class="list-main"><div class="list-icon">${ic}</div><div><strong>${t}</strong><small>Belum</small></div></div></div>`;
+    let tl;
+    if(o.status==="dibatalkan"){tl=step("🧾","Pesanan dibuat",o.createdAt)+`<div class="list-item"><div class="list-main"><div class="list-icon">✖️</div><div><strong>Dibatalkan</strong><small>${fmtDT(o.updatedAt)}</small></div></div><span class="badge danger">Batal</span></div>`;}
+    else tl=step("🧾","Pesanan dibuat",o.createdAt)+step("💳","Dibayar",o.paidAt)+step("📦","Diproses penjual",o.processedAt)+step("🚚","Dikirim",o.shippedAt,o.courier?" • "+esc(o.courier)+(o.trackingNumber&&o.trackingNumber!=="-"?" • Resi "+esc(o.trackingNumber):""):"")+step("🌾","Diterima pembeli",o.receivedAt);
+    document.getElementById("odBody").innerHTML=`<div class="product-meta" style="margin-bottom:8px"><span class="badge ${st[1]}">${st[0]}</span> &nbsp;${buy?"Penjual: "+esc(o.sellerName):"Pembeli: "+esc(o.buyerName)} • ${esc(o.paymentMethod||"-")}</div>`+
+      (o.items||[]).map(i=>`<div class="cart-item"><div class="cart-thumb">${esc(i.icon||"🌱")}</div><div class="cart-item-main"><strong>${esc(i.name)}</strong><small>${i.qty} ${esc(i.unit||"unit")} × ${formatRupiah(num(i.price))}</small></div><strong>${formatRupiah(num(i.price)*num(i.qty))}</strong></div>`).join("")+
+      `<div class="cart-total"><span>Total</span><span>${formatRupiah(num(o.total))}</span></div><p style="font-size:11px;margin:8px 0"><strong>Alamat:</strong> ${esc(o.address||"-")}</p><div class="list">${tl}</div>`;
+    openModal("modalOrder");
   };
   function cancelOrder(id){
     if(!confirm("Batalkan pesanan ini? Stok akan dikembalikan."))return;
@@ -3365,14 +3418,15 @@ updateCartCount();
   function stopOrders(){unsubs.forEach(u=>u());unsubs=[];buyOrders=[];sellOrders=[];}
   function actions(o){
     const b=(a,t,c)=>`<button class="btn ${c||"btn-primary"}" onclick="orderAction('${o.id}','${a}')">${t}</button>`;
+    let main="";
     if(o.kind==="beli"){
-      if(o.status==="menunggu_pembayaran")return b("pay","Bayar")+" "+b("cancel","Batalkan","btn-outline");
-      if(o.status==="dikirim")return b("receive","Pesanan Diterima");
+      if(o.status==="menunggu_pembayaran")main=b("pay","Bayar")+" "+b("cancel","Batalkan","btn-outline");
+      else if(o.status==="dikirim")main=b("receive","Pesanan Diterima");
     }else{
-      if(o.status==="dibayar")return b("process","Proses");
-      if(o.status==="diproses")return b("ship","Kirim");
+      if(o.status==="dibayar")main=b("process","Proses");
+      else if(o.status==="diproses")main=b("ship","Kirim");
     }
-    return "-";
+    return (main?main+" ":"")+`<button class="btn btn-outline" onclick="orderDetail('${o.id}')">Detail</button>`;
   }
   function notif(o){
     const n=(o.items||[]).map(i=>i.name).join(", ");
@@ -3380,19 +3434,20 @@ updateCartCount();
       if(o.status==="menunggu_pembayaran")return ["⏳","Menunggu pembayaran dari "+o.buyerName,n,false];
       if(o.status==="dibayar")return ["🛒","Pesanan baru dari "+o.buyerName+" siap diproses",n,true];
       if(o.status==="diproses")return ["📦","Pesanan untuk "+o.buyerName+" siap dikirim",n,true];
-      if(o.status==="dikirim")return ["🚚","Menunggu "+o.buyerName+" menerima pesanan",n,false];
+      if(o.status==="dikirim")return ["🚚","Dikirim via "+(o.courier||"kurir")+(o.trackingNumber&&o.trackingNumber!=="-"?" (resi "+o.trackingNumber+")":"")+", menunggu "+o.buyerName+" menerima",n,false];
       if(o.status==="selesai")return ["💰","Pesanan selesai, "+formatRupiah(num(o.total))+" diterima",n,false];
       return ["✖️","Pesanan dibatalkan oleh "+o.buyerName,n,false];
     }
     if(o.status==="menunggu_pembayaran")return ["💳","Selesaikan pembayaran ke "+o.sellerName,n,true];
     if(o.status==="dibayar")return ["✅","Pembayaran diterima, menunggu "+o.sellerName+" memproses",n,false];
     if(o.status==="diproses")return ["📦","Pesanan Anda sedang diproses "+o.sellerName,n,false];
-    if(o.status==="dikirim")return ["🚚","Pesanan dikirim, konfirmasi bila sudah diterima",n,true];
+    if(o.status==="dikirim")return ["🚚","Pesanan dikirim via "+(o.courier||"kurir")+(o.trackingNumber&&o.trackingNumber!=="-"?" (resi "+o.trackingNumber+")":"")+". Tekan Diterima jika barang sudah sampai",n,true];
     if(o.status==="selesai")return ["🌾","Pesanan dari "+o.sellerName+" selesai",n,false];
     return ["✖️","Pesanan ke "+o.sellerName+" dibatalkan",n,false];
   }
   function renderOrders(){
     const rows=[...buyOrders.map(o=>({...o,kind:"beli"})),...sellOrders.map(o=>({...o,kind:"jual"}))].sort((a,b)=>ms(b)-ms(a));
+    lastRows=rows;
     const paid=["dibayar","diproses","dikirim","selesai"],open=["menunggu_pembayaran","dibayar","diproses","dikirim"];
     const sum=a=>a.reduce((s,o)=>s+num(o.total),0);
     const income=sum(sellOrders.filter(o=>o.status==="selesai"));
@@ -3403,7 +3458,7 @@ updateCartCount();
     setT("tkOrders",sellOrders.length);
     const tb=document.getElementById("orderRows");
     if(tb)tb.innerHTML=rows.length?rows.map(o=>{const st=ST[o.status]||[o.status,"info"],buy=o.kind==="beli";
-      return `<tr><td>${oid(o)}</td><td>${fmtDate(o.createdAt)}</td><td>${buy?"Pembelian":"Penjualan"}</td><td>${esc(names(o))}<br><small>${buy?"Penjual: "+esc(o.sellerName):"Pembeli: "+esc(o.buyerName)} • ${esc(o.paymentMethod||"-")}${buy?"":" • Kirim ke: "+esc(o.address||"-")}</small></td><td>${formatRupiah(num(o.total))}</td><td><span class="badge ${st[1]}">${st[0]}</span></td><td>${actions(o)}</td></tr>`;}).join(""):'<tr><td colspan="7"><div class="empty-state">Belum ada transaksi.</div></td></tr>';
+      return `<tr><td>${oid(o)}</td><td>${fmtDate(o.createdAt)}</td><td>${buy?"Pembelian":"Penjualan"}</td><td>${esc(names(o))}<br><small>${buy?"Penjual: "+esc(o.sellerName):"Pembeli: "+esc(o.buyerName)} • ${esc(o.paymentMethod||"-")}${buy?"":" • Kirim ke: "+esc(o.address||"-")}</small>${shipLine(o)}</td><td>${formatRupiah(num(o.total))}</td><td><span class="badge ${st[1]}">${st[0]}</span></td><td>${actions(o)}</td></tr>`;}).join(""):'<tr><td colspan="7"><div class="empty-state">Belum ada transaksi.</div></td></tr>';
     const item=(ic,t,s,badge)=>`<div class="list-item"><div class="list-main"><div class="list-icon">${ic}</div><div><strong>${esc(t)}</strong><small>${esc(s)}</small></div></div>${badge}</div>`;
     const act=rows.slice(0,4).map(o=>{const st=ST[o.status]||[o.status,"info"];return item(o.kind==="beli"?"🛒":"💰",(o.kind==="beli"?"Pembelian ":"Penjualan ")+names(o),fmtDate(o.createdAt)+" • "+formatRupiah(num(o.total)),`<span class="badge ${st[1]}">${st[0]}</span>`);}).join("");
     const da=document.getElementById("dashActivity");if(da)da.innerHTML=act||'<div class="empty-state">Belum ada aktivitas.</div>';
