@@ -1319,14 +1319,14 @@
 
         <button class="icon-button" onclick="showPage('notifikasi')">
           🔔
-          <span class="notification-dot"></span>
+          <span class="notification-dot" id="notifDot" style="display:none"></span>
         </button>
 
         <button class="icon-button" id="roleSwitchBtn" onclick="openRoleSwitcher()" title="Ganti peran" style="display:none">🔄</button>
 
         <div class="user-mini">
           <div class="avatar" id="topAvatar">AR</div>
-          <span id="topName">Pengguna</span>
+          <span id="topName">Andi Rahman</span>
         </div>
 
       </div>
@@ -1341,7 +1341,7 @@
     <section class="page active" id="page-dashboard">
 
       <div class="welcome">
-        <h1 id="welcomeTitle">Selamat datang! 👋</h1>
+        <h1 id="welcomeTitle">Selamat datang, Andi! 👋</h1>
         <p id="welcomeText">
           Kelola lahan, pekerjaan, hasil panen, dan aktivitas pertanian Anda dalam satu tempat.
         </p>
@@ -1373,8 +1373,8 @@
             <span>Hasil Panen</span>
             <div class="stat-icon">🌾</div>
           </div>
-          <h3 id="statHarvest">0</h3>
-          <p>Bulan ini</p>
+          <h3 id="statHarvest">0 kg</h3>
+          <p>Belum ada catatan</p>
         </div>
 
         <div class="stat-card">
@@ -1438,10 +1438,7 @@
             </button>
           </div>
 
-          <div class="list" id="dashboardRecentActivity"><div class="empty-state">Belum ada aktivitas.</div>
-          </div>
-
-          </div>
+          <div class="list"><div id="dashActivity"><div class="empty-state">Belum ada aktivitas.</div></div></div>
 
         </div>
 
@@ -1455,8 +1452,63 @@
             </button>
           </div>
 
-          <div class="list"><div class="empty-state">Belum ada notifikasi.</div></div>
-</div>
+          <div class="list"><div id="dashNotif"><div class="empty-state">Belum ada notifikasi.</div></div></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         LAHAN
+    ================================================= -->
+
+    <section class="page" id="page-lahan">
+
+      <div class="section-header">
+        <div>
+          <h2>Lahan Saya</h2>
+          <p>Kelola seluruh lahan pertanian Anda.</p>
+        </div>
+
+        <button class="btn btn-primary" onclick="openModal('modalLahan')">
+          + Tambah Lahan
+        </button>
+      </div>
+
+
+      <div class="farm-grid" id="farmGrid">
+        <div class="empty-state">Memuat data lahan…</div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         PEKERJAAN PENGGUNA
+    ================================================= -->
+
+    <section class="page" id="page-pekerjaan">
+
+      <div class="section-header">
+
+        <div>
+          <h2>Pekerjaan</h2>
+          <p>Kelola pekerjaan pertanian Anda.</p>
+        </div>
+
+        <button class="btn btn-primary" onclick="openModal('modalPekerjaan')">
+          + Buat Pekerjaan
+        </button>
+
+      </div>
+
+
+      <div class="job-grid" id="jobGrid">
+        <div class="empty-state">Memuat data pekerjaan…</div>
       </div>
 
 
@@ -1500,7 +1552,7 @@
               </tr>
             </thead>
 
-            <tbody id="harvestTableBody"><tr><td colspan="6"><div class="empty-state">Belum ada hasil panen.</div></td></tr></tbody>
+            <tbody id="panenBody"><tr><td colspan="6"><div class="empty-state">Belum ada hasil panen.</div></td></tr></tbody>
 
           </table>
 
@@ -1547,13 +1599,13 @@
 
       <div id="marketProduk">
         <div class="product-grid" id="productGrid">
-          <div class="empty-state">Belum ada produk yang tersedia. Produk akan muncul setelah pemilik toko mempublikasikannya.</div>
+          <div class="empty-state">Memuat produk…</div>
         </div>
       </div>
 
       <div id="marketJasa" style="display:none">
-        <div class="service-grid" id="serviceGrid">
-          <div class="empty-state">Belum ada jasa yang dipublikasikan.</div>
+        <div class="service-grid">
+          <div class="empty-state">Belum ada jasa tersedia.</div>
         </div>
       </div>
     </section>
@@ -1564,7 +1616,7 @@
     <section class="page" id="page-toko">
       <div class="section-header"><div><h2>Toko Saya</h2><p>Kelola produk atau jasa yang Anda tawarkan di PETANI.</p></div><button class="btn btn-primary" onclick="openModal('modalProduk')">+ Tambah Produk</button></div>
       <div class="store-banner"><div><h3 id="storeTitle">🏪 Toko Saya</h3><p>Toko Anda dapat menjual produk pertanian sekaligus menawarkan jasa.</p></div><div class="store-actions"><button class="btn" style="background:white;color:var(--primary)" onclick="openModal('modalProduk')">+ Produk</button><button class="btn" style="background:rgba(255,255,255,.16);color:white;border:1px solid rgba(255,255,255,.4)" onclick="openModal('modalJasa')">+ Jasa</button></div></div>
-      <div class="stats-grid"><div class="stat-card"><div class="stat-top"><span>Produk Aktif</span><div class="stat-icon">📦</div></div><h3 id="storeProductCount">0</h3><p>Produk dijual</p></div><div class="stat-card"><div class="stat-top"><span>Pesanan</span><div class="stat-icon">🛒</div></div><h3 id="storeOrderCount">0</h3><p>Pesanan</p></div><div class="stat-card"><div class="stat-top"><span>Pendapatan</span><div class="stat-icon">💰</div></div><h3 id="storeIncome">Rp0</h3><p>Pendapatan</p></div><div class="stat-card"><div class="stat-top"><span>Rating</span><div class="stat-icon">⭐</div></div><h3 id="storeRating">-</h3><p>Dari pembeli</p></div></div>
+      <div class="stats-grid"><div class="stat-card"><div class="stat-top"><span>Produk Aktif</span><div class="stat-icon">📦</div></div><h3 id="tkProducts">0</h3><p>Produk dijual</p></div><div class="stat-card"><div class="stat-top"><span>Pesanan</span><div class="stat-icon">🛒</div></div><h3 id="tkOrders">0</h3><p>Total pesanan masuk</p></div><div class="stat-card"><div class="stat-top"><span>Pendapatan</span><div class="stat-icon">💰</div></div><h3 id="tkIncome">Rp0</h3><p>Penjualan selesai</p></div><div class="stat-card"><div class="stat-top"><span>Rating</span><div class="stat-icon">⭐</div></div><h3 id="tkRating">-</h3><p>Belum ada rating</p></div></div>
       <div class="card" style="margin-bottom:20px;">
         <div class="card-header">
           <h3>Produk Saya</h3>
@@ -1586,46 +1638,28 @@
     ================================================= -->
 
     <section class="page" id="page-transaksi">
-      <div class="section-header">
-        <div><h2>Transaksi</h2><p>Pesanan, pembayaran, dan riwayat transaksi Anda.</p></div>
-      </div>
+      <div class="section-header"><div><h2>Transaksi</h2><p>Pembelian dan penjualan marketplace Anda.</p></div></div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-top"><span>Pendapatan</span><div class="stat-icon">💰</div></div><h3 id="trxIncome">Rp0</h3><p>Penjualan selesai</p></div>
-        <div class="stat-card"><div class="stat-top"><span>Pengeluaran</span><div class="stat-icon">💸</div></div><h3 id="trxExpense">Rp0</h3><p>Pembelian selesai</p></div>
-        <div class="stat-card"><div class="stat-top"><span>Menunggu</span><div class="stat-icon">⏳</div></div><h3 id="trxPending">0</h3><p>Pesanan aktif</p></div>
-        <div class="stat-card"><div class="stat-top"><span>Selesai</span><div class="stat-icon">✓</div></div><h3 id="trxCompleted">0</h3><p>Transaksi selesai</p></div>
+        <div class="stat-card"><div class="stat-top"><span>Pendapatan</span><div class="stat-icon">💰</div></div><h3 id="stIncome">Rp0</h3><p>Penjualan selesai</p></div>
+        <div class="stat-card"><div class="stat-top"><span>Pengeluaran</span><div class="stat-icon">💸</div></div><h3 id="stExpense">Rp0</h3><p>Pembelian dibayar</p></div>
+        <div class="stat-card"><div class="stat-top"><span>Menunggu</span><div class="stat-icon">⏳</div></div><h3 id="stPending">Rp0</h3><p>Penjualan berjalan</p></div>
+        <div class="stat-card"><div class="stat-top"><span>Selesai</span><div class="stat-icon">✓</div></div><h3 id="stDone">0</h3><p>Transaksi</p></div>
       </div>
-      <div class="card">
-        <div class="card-header"><h3>Daftar Transaksi</h3></div>
-        <div class="table-wrap">
-          <table><thead><tr><th>ID</th><th>Tanggal</th><th>Produk</th><th>Peran</th><th>Nominal</th><th>Status</th><th>Aksi</th></tr></thead>
-          <tbody id="transactionTableBody"><tr><td colspan="7"><div class="empty-state">Belum ada transaksi.</div></td></tr></tbody></table>
-        </div>
-      </div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="orderRows"><tr><td colspan="7"><div class="empty-state">Belum ada transaksi.</div></td></tr></tbody>
+      </table></div></div>
     </section>
+
 
     <!-- =================================================
          NOTIFIKASI
     ================================================= -->
 
     <section class="page" id="page-notifikasi">
-
-      <div class="section-header">
-
-        <div>
-          <h2>Notifikasi</h2>
-          <p>Informasi terbaru dari aktivitas PETANI.</p>
-        </div>
-
-        <button class="btn btn-outline" onclick="showToast('Semua notifikasi ditandai sudah dibaca')">
-          Tandai Dibaca
-        </button>
-
-      </div>
-
-
-      <div class="card"><div class="list" id="notificationList"><div class="empty-state">Belum ada notifikasi.</div></div></div>
-</section>
+      <div class="section-header"><div><h2>Notifikasi</h2><p>Informasi terbaru dari pesanan Anda.</p></div></div>
+      <div class="card"><div class="list" id="notifList"><div class="empty-state">Belum ada notifikasi.</div></div></div>
+    </section>
 
 
     <!-- =================================================
@@ -1647,11 +1681,11 @@
         <div class="profile-head">
 
           <div class="profile-avatar" id="profileAvatar">
-            <span id="profileInitials">-</span>
+            AR
           </div>
 
           <div>
-            <h2 id="profileName">Pengguna</h2>
+            <h2 id="profileName">Andi Rahman</h2>
             <p id="profileRole">Petani Pengguna</p>
           </div>
 
@@ -1662,7 +1696,7 @@
 
           <div class="form-group">
             <label>Nama Lengkap</label>
-            <input id="profileNameInput" value="Pengguna">
+            <input id="profileNameInput" value="Andi Rahman">
           </div>
 
           <div class="form-group">
@@ -1990,9 +2024,7 @@
       <div class="form-group">
         <label>Lahan</label>
         <select>
-          
-          <option>Sawah Harapan</option>
-          <option>Lahan Sejahtera</option>
+          <option value="">Pilih lahan…</option>
         </select>
       </div>
 
@@ -2073,17 +2105,15 @@
 <!-- MODAL KERANJANG -->
 <div class="modal-overlay" id="modalCart"><div class="modal"><div class="modal-header"><div><h3>Keranjang</h3><p style="font-size:11px;color:#6b7280;margin-top:3px;">Produk yang siap Anda pesan.</p></div><button class="close-modal" onclick="closeModal('modalCart')">✕</button></div><div class="cart-list" id="cartList"></div><div class="cart-total"><span>Total</span><span id="cartTotal">Rp0</span></div><br><button class="btn btn-primary" style="width:100%" onclick="checkoutCart()">Lanjutkan Pesanan</button></div></div>
 
-<!-- DETAIL PRODUK -->
-<div class="modal-overlay" id="modalProductDetail"><div class="modal"><div class="modal-header"><div><h3 id="detailProductName">Detail Produk</h3><p style="font-size:11px;color:#6b7280;margin-top:3px;">Informasi produk sebelum membeli.</p></div><button class="close-modal" onclick="closeModal('modalProductDetail')">✕</button></div><div id="detailProductBody"></div><br><button class="btn btn-primary" id="detailBuyBtn">Beli Sekarang</button></div></div>
-
-<!-- CHECKOUT -->
-<div class="modal-overlay" id="modalCheckout"><div class="modal"><div class="modal-header"><div><h3>Konfirmasi Pesanan</h3><p style="font-size:11px;color:#6b7280;margin-top:3px;">Lengkapi alamat dan metode pembayaran.</p></div><button class="close-modal" onclick="closeModal('modalCheckout')">✕</button></div><div id="checkoutSummary"></div><div class="form-grid"><div class="form-group full"><label>Alamat Pengiriman</label><textarea id="checkoutAddress" placeholder="Alamat lengkap penerima"></textarea></div><div class="form-group full"><label>Metode Pembayaran</label><select id="checkoutPayment"><option value="transfer">Transfer Bank</option><option value="cod">Bayar di Tempat</option><option value="ewallet">E-Wallet</option></select></div></div><br><button class="btn btn-primary" style="width:100%" onclick="createOrderFromCart()">Buat Pesanan</button></div></div>
-
 <!-- TOAST -->
 
 <div class="toast" id="toast"></div>
 
 
+
+<div class="modal-overlay" id="modalDetail"><div class="modal"><div class="modal-header"><div><h3 id="detName">Detail Produk</h3><p id="detSeller" style="font-size:11px;color:#6b7280;margin-top:3px;"></p></div><button class="close-modal" onclick="closeModal('modalDetail')">✕</button></div><div id="detBody"></div><div class="form-group" style="margin-top:12px"><label>Jumlah</label><input id="detQty" type="number" min="1" value="1"></div><br><button class="btn btn-primary" id="detAddBtn" style="width:100%">+ Tambah ke Keranjang</button></div></div>
+
+<div class="modal-overlay" id="modalCheckout"><div class="modal"><div class="modal-header"><div><h3>Checkout</h3><p style="font-size:11px;color:#6b7280;margin-top:3px;">Periksa pesanan, alamat, dan metode pembayaran.</p></div><button class="close-modal" onclick="closeModal('modalCheckout')">✕</button></div><div class="cart-list" id="coSummary"></div><div class="cart-total"><span>Total</span><span id="coTotal">Rp0</span></div><div class="form-grid" style="margin-top:12px"><div class="form-group full"><label>Alamat Pengiriman</label><textarea id="coAddress" placeholder="Alamat lengkap penerima..."></textarea></div><div class="form-group full"><label>Metode Pembayaran</label><select id="coMethod"><option>Transfer Bank</option><option>QRIS</option><option>E-Wallet</option></select></div></div><p style="font-size:10px;color:#6b7280;margin-top:8px">Pembayaran masih simulasi status (belum payment gateway). Pesanan dipisah otomatis per penjual.</p><br><button class="btn btn-primary" id="coBtn" style="width:100%" onclick="confirmCheckout()">Buat Pesanan</button></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -2101,7 +2131,7 @@ let currentUserId = null;
 
 const userData = {
   pengguna: {
-    name: "Pengguna",
+    name: "Andi Rahman",
     initials: "AR",
     role: "Petani Pengguna"
   },
@@ -2112,7 +2142,7 @@ const userData = {
   }
 };
 
-let cart = JSON.parse(localStorage.getItem("petaniCart") || "[]");
+let cart = []; // diisi per akun oleh loadCart()
 let marketCategory = "all";
 
 
@@ -2297,7 +2327,8 @@ function handleAuthSubmit() {
       return;
     }
 
-    auth.createUserWithEmailAndPassword(email.toLowerCase(), password)
+    window.__registering = true;
+    auth.createUserWithEmailAndPassword(email, password)
       .then(function (cred) {
         const roles = selectedRole === "keduanya"
           ? { pengguna: true, mitra: true }
@@ -2316,21 +2347,11 @@ function handleAuthSubmit() {
         showAuthError(describeAuthError(err));
       })
       .finally(function () {
+        window.__registering = false;
         submitBtn.disabled = false;
       });
   } else {
-    // Selalu bersihkan sesi lama sebelum login akun baru.
-    // Ini mencegah akun yang masih tersimpan di browser terlihat
-    // sebagai akun email yang baru dimasukkan.
-    auth.signOut()
-      .catch(function () { /* tidak masalah jika memang belum ada sesi */ })
-      .then(function () {
-        return auth.signInWithEmailAndPassword(email.toLowerCase(), password);
-      })
-      .then(function (cred) {
-        // Identitas utama selalu UID Firebase, bukan email atau password.
-        currentUserId = cred.user.uid;
-      })
+    auth.signInWithEmailAndPassword(email, password)
       .catch(function (err) {
         showAuthError(describeAuthError(err));
       })
@@ -2377,8 +2398,6 @@ function setRoleInterface(role) {
   updateUserInterface();
   loadJobs();
   loadProducts();
-  loadMarketplaceProducts();
-  loadTransactions();
   if (role === "pengguna") { loadFarms(); populateJobFarms(); }
 }
 
@@ -2465,12 +2484,7 @@ function describeAuthError(err) {
 }
 
 function logout() {
-  if (window.__jobUnsub) { window.__jobUnsub(); window.__jobUnsub = null; }
-  if (window.__farmUnsub) { window.__farmUnsub(); window.__farmUnsub = null; }
-  currentUserId = null;
-  currentRole = null;
-  window.__petaniProfile = null;
-  auth.signOut().catch(function(err){ showAuthError("Gagal keluar: " + err.message); });
+  auth.signOut();
 }
 
 function showLoginScreen() {
@@ -2684,7 +2698,7 @@ function createJob() {
 
 function saveHarvest() {
   closeModal("modalPanen");
-  showToast("Hasil panen berhasil dicatat.");
+  showToast("Pencatatan panen belum tersimpan: fitur ini menyusul (akan memakai Firestore).");
 }
 
 function saveProfile() {
@@ -2746,44 +2760,67 @@ function filterMarketplace() {
   });
 }
 
-function cartStorageKey(){ return "petaniCart_" + (currentUserId || "guest"); }
-function addToCart(name, price, icon, productId) {
-  const existing = cart.find(item => item.productId === productId);
+function addToCart(name, price, icon) {
+  const existing = cart.find(item => item.name === name);
   if (existing) existing.qty++;
-  else cart.push({ productId, name, price, icon, qty: 1 });
-  localStorage.setItem(cartStorageKey(), JSON.stringify(cart));
-  updateCartCount(); showToast(name + " ditambahkan ke keranjang.");
+  else cart.push({ name, price, icon, qty: 1 });
+
+  localStorage.setItem("petaniCart", JSON.stringify(cart));
+  updateCartCount();
+  showToast(name + " ditambahkan ke keranjang.");
 }
-function updateCartCount(){ const el=document.getElementById("cartCount"); if(el)el.textContent=cart.reduce((n,x)=>n+(Number(x.qty)||0),0); }
-function openCart(){ renderCart(); openModal("modalCart"); }
-function renderCart(){
-  const list=document.getElementById("cartList"), totalEl=document.getElementById("cartTotal"); if(!list)return;
-  if(!cart.length){list.innerHTML='<div class="empty-state">Keranjang masih kosong.</div>'; if(totalEl)totalEl.textContent="Rp0"; return;}
-  let total=0;
-  list.innerHTML=cart.map((x,i)=>{const sub=Number(x.price||0)*Number(x.qty||1);total+=sub;return `<div class="list-item"><div class="list-main"><div class="list-icon">${esc(x.icon||"🌱")}</div><div><strong>${esc(x.name)}</strong><small>${formatRupiah(x.price)} × ${x.qty}</small></div></div><button class="btn btn-outline" onclick="removeCart(${i})">Hapus</button></div>`}).join("");
-  if(totalEl)totalEl.textContent=formatRupiah(total);
+
+function updateCartCount() {
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+  const el = document.getElementById("cartCount");
+  if (el) el.textContent = count;
 }
-function removeCart(index){cart.splice(index,1);localStorage.setItem(cartStorageKey(),JSON.stringify(cart));updateCartCount();renderCart();}
-function checkoutCart(){
-  if(!cart.length){showToast("Keranjang masih kosong.");return;}
+
+function formatRupiah(n) {
+  return "Rp" + Number(n).toLocaleString("id-ID");
+}
+
+function openCart() {
+  renderCart();
+  openModal("modalCart");
+}
+
+function renderCart() {
+  const list = document.getElementById("cartList");
+  const totalEl = document.getElementById("cartTotal");
+
+  if (!cart.length) {
+    list.innerHTML =
+      '<div style="text-align:center;padding:25px;color:#6b7280;font-size:12px">🛒<br><br>Keranjang masih kosong.</div>';
+    totalEl.textContent = "Rp0";
+    return;
+  }
+
+  let total = 0;
+  list.innerHTML = cart
+    .map((item, i) => {
+      total += item.price * item.qty;
+      return `<div class="cart-item"><div class="cart-thumb">${item.icon}</div><div class="cart-item-main"><strong>${item.name}</strong><small>${formatRupiah(item.price)} × ${item.qty}</small></div><button class="btn btn-danger" onclick="removeCart(${i})">Hapus</button></div>`;
+    })
+    .join("");
+
+  totalEl.textContent = formatRupiah(total);
+}
+
+function removeCart(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("petaniCart", JSON.stringify(cart));
+  updateCartCount();
+  renderCart();
+}
+
+function checkoutCart() {
+  if (!cart.length) {
+    showToast("Keranjang masih kosong.");
+    return;
+  }
   closeModal("modalCart");
-  const total=cart.reduce((n,x)=>n+Number(x.price||0)*Number(x.qty||1),0);
-  document.getElementById("checkoutSummary").innerHTML=`<div class="card" style="margin-bottom:15px"><strong>${cart.length} produk</strong><p>Total pesanan: <strong>${formatRupiah(total)}</strong></p></div>`;
-  db.collection("users").doc(currentUserId).get().then(d=>{document.getElementById("checkoutAddress").value=(d.exists&&d.data().address)||"";openModal("modalCheckout");});
-}
-function createOrderFromCart(){
-  if(!currentUserId||!cart.length)return;
-  const address=document.getElementById("checkoutAddress").value.trim(); const payment=document.getElementById("checkoutPayment").value;
-  if(!address){showToast("Alamat pengiriman wajib diisi.");return;}
-  const ids=[...new Set(cart.map(x=>x.productId))];
-  Promise.all(ids.map(id=>db.collection("products").doc(id).get())).then(docs=>{
-    const byId={}; docs.forEach(d=>{if(d.exists)byId[d.id]=d.data();});
-    const groups={};
-    cart.forEach(x=>{const p=byId[x.productId];if(!p||!p.active)throw new Error("Produk "+x.name+" sudah tidak tersedia.");if(Number(p.stock||0)<Number(x.qty||1))throw new Error("Stok "+x.name+" tidak mencukupi.");if(!p.ownerId)throw new Error("Produk "+x.name+" belum memiliki pemilik toko.");if(!groups[p.ownerId])groups[p.ownerId]={sellerId:p.ownerId,sellerName:p.ownerName||"Penjual",items:[]};groups[p.ownerId].items.push({productId:x.productId,name:p.name||x.name,price:Number(p.price)||0,qty:Number(x.qty)||1,subtotal:(Number(p.price)||0)*(Number(x.qty)||1)});});
-    const batch=db.batch();
-    Object.values(groups).forEach(g=>{const total=g.items.reduce((n,x)=>n+x.subtotal,0);const ref=db.collection("orders").doc();batch.set(ref,{buyerId:currentUserId,buyerName:(window.__petaniProfile||{}).name||"",sellerId:g.sellerId,sellerName:g.sellerName,items:g.items,total,address,paymentMethod:payment,status:"Menunggu Pembayaran",createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});g.items.forEach(item=>batch.update(db.collection("products").doc(item.productId),{stock:firebase.firestore.FieldValue.increment(-item.qty),updatedAt:firebase.firestore.FieldValue.serverTimestamp()}));});
-    return batch.commit();
-  }).then(()=>{cart=[];localStorage.removeItem(cartStorageKey());updateCartCount();closeModal("modalCheckout");showPage("transaksi");loadTransactions();showToast("Pesanan dibuat. Silakan selesaikan pembayaran.");}).catch(e=>showToast("Pesanan gagal dibuat: "+e.message));
+  showToast("Pesanan dibuat. Lanjutkan ke transaksi untuk pembayaran.");
 }
 
 function createStore() {
@@ -2810,7 +2847,7 @@ function saveProduct() {
 
 function saveService() {
   closeModal("modalJasa");
-  showToast("Jasa berhasil dipublikasikan.");
+  showToast("Fitur jasa belum aktif: menyusul (akan memakai Firestore).");
 }
 
 
@@ -3061,38 +3098,14 @@ updateCartCount();
     db.collection("jobs").doc(id).update({farmId:fs?.value||"",farmName:fo?.dataset.name||"",commodity:fo?.dataset.commodity||v("jobCommodity"),type:v("jobType"),startDate:v("jobStartDate"),duration:v("jobDuration"),workers:v("jobWorkers"),wage:v("jobWage"),location:v("jobLocation"),description:v("jobDescription"),updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{closeModal("modalPekerjaan");resetJobButton();showToast("Pekerjaan berhasil diperbarui.");}).catch(e=>showToast("Gagal memperbarui pekerjaan: "+e.message));
   };
 
-  // Marketplace nyata: hanya produk aktif dari Firestore, tidak ada data contoh.
-  window.loadMarketplaceProducts=function(){
-    const g=document.getElementById("productGrid"); if(!g)return;
-    if(window.__marketProductUnsub)window.__marketProductUnsub();
-    window.__marketProductUnsub=db.collection("products").where("active","==",true).onSnapshot(function(s){
-      if(s.empty){g.innerHTML='<div class="empty-state">Belum ada produk tersedia.</div>';return;}
-      g.innerHTML=s.docs.map(d=>{const p=d.data();return `<div class="product-card" data-category="${esc((p.category||"").toLowerCase())}" data-search="${esc(((p.name||"")+" "+(p.description||"")+" "+(p.category||"")).toLowerCase())}"><div class="product-photo">${esc(p.icon||"🌱")}</div><div class="product-body"><h3>${esc(p.name)}</h3><p>${esc(p.description||"")}</p><div class="product-price">${formatRupiah(p.price||0)}</div><div class="product-meta">${esc(p.stock||0)} ${esc(p.unit||"unit")} • ${esc(p.ownerName||"Penjual")}</div><div class="product-actions"><button class="btn btn-outline" onclick="openProductDetail('${d.id}')">Detail</button><button class="btn btn-primary" onclick="addProductToCart('${d.id}')">+ Keranjang</button></div></div></div>`}).join(""); filterMarketplace();
-    },function(e){showToast("Gagal memuat marketplace: "+e.message);});
-  };
-  window.addProductToCart=function(id){db.collection("products").doc(id).get().then(d=>{if(!d.exists||!d.data().active)throw new Error("Produk tidak tersedia.");const p=d.data();if(Number(p.stock||0)<1)throw new Error("Stok habis.");addToCart(p.name,Number(p.price)||0,p.icon||"🌱",id);}).catch(e=>showToast(e.message));};
-  window.openProductDetail=function(id){db.collection("products").doc(id).get().then(d=>{if(!d.exists||!d.data().active)throw new Error("Produk tidak tersedia.");const p=d.data();document.getElementById("detailProductName").textContent=p.name||"Detail Produk";document.getElementById("detailProductBody").innerHTML=`<div class="product-photo" style="font-size:50px;margin-bottom:15px">${esc(p.icon||"🌱")}</div><p>${esc(p.description||"Tidak ada deskripsi.")}</p><p><strong>Harga:</strong> ${formatRupiah(p.price||0)}</p><p><strong>Stok:</strong> ${esc(p.stock||0)} ${esc(p.unit||"unit")}</p><p><strong>Penjual:</strong> ${esc(p.ownerName||"-")}</p>`;const b=document.getElementById("detailBuyBtn");b.disabled=Number(p.stock||0)<1;b.textContent=Number(p.stock||0)<1?"Stok Habis":"Tambah ke Keranjang";b.onclick=function(){addProductToCart(id);closeModal("modalProductDetail");};openModal("modalProductDetail");}).catch(e=>showToast(e.message));};
-
-  window.loadTransactions=function(){
-    if(!currentUserId)return; if(window.__trxBuyerUnsub)window.__trxBuyerUnsub(); if(window.__trxSellerUnsub)window.__trxSellerUnsub();
-    let buyerRows=[],sellerRows=[]; const render=()=>{const map={};buyerRows.concat(sellerRows).forEach(x=>map[x.id]=x);renderTransactions(Object.values(map));};
-    window.__trxBuyerUnsub=db.collection("orders").where("buyerId","==",currentUserId).onSnapshot(s=>{buyerRows=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>showToast("Gagal memuat pembelian: "+e.message));
-    window.__trxSellerUnsub=db.collection("orders").where("sellerId","==",currentUserId).onSnapshot(s=>{sellerRows=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>showToast("Gagal memuat penjualan: "+e.message));
-  };
-  window.payOrder=function(id){db.collection("orders").doc(id).get().then(d=>{if(!d.exists)throw new Error("Pesanan tidak ditemukan.");if(d.data().buyerId!==currentUserId)throw new Error("Anda bukan pembeli pesanan ini.");if(d.data().status!=="Menunggu Pembayaran")throw new Error("Pesanan tidak menunggu pembayaran.");return db.collection("orders").doc(id).update({status:"Dibayar",paidAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}).then(()=>{showToast("Pembayaran dicatat.");loadTransactions();}).catch(e=>showToast("Gagal mencatat pembayaran: "+e.message));};
-  window.confirmOrderPayment=function(id){db.collection("orders").doc(id).get().then(d=>{if(!d.exists)throw new Error("Pesanan tidak ditemukan.");if(d.data().sellerId!==currentUserId)throw new Error("Anda bukan pemilik pesanan ini.");return db.collection("orders").doc(id).update({status:"Dibayar",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}).then(()=>{showToast("Pembayaran dikonfirmasi.");loadTransactions();}).catch(e=>showToast("Gagal mengonfirmasi pembayaran: "+e.message));};
-  window.shipOrder=function(id){db.collection("orders").doc(id).get().then(d=>{if(!d.exists)throw new Error("Pesanan tidak ditemukan.");if(d.data().sellerId!==currentUserId)throw new Error("Anda bukan pemilik pesanan ini.");return db.collection("orders").doc(id).update({status:"Dikirim",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}).then(()=>{showToast("Pesanan diproses/dikirim.");loadTransactions();}).catch(e=>showToast("Gagal memperbarui pesanan: "+e.message));};
-  window.completeOrder=function(id){db.collection("orders").doc(id).get().then(d=>{if(!d.exists)throw new Error("Pesanan tidak ditemukan.");if(d.data().buyerId!==currentUserId)throw new Error("Anda bukan pembeli pesanan ini.");return db.collection("orders").doc(id).update({status:"Selesai",completedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}).then(()=>{showToast("Pesanan selesai.");loadTransactions();}).catch(e=>showToast("Gagal menyelesaikan pesanan: "+e.message));};
-
   // Products: owner-specific realtime list in Toko Saya.
   window.loadProducts=function(){
     if(!currentUserId)return;
     if(window.__productUnsub)window.__productUnsub();
-    window.__productUnsub=db.collection("products").where("ownerId","==",currentUserId).onSnapshot(renderMyProductsFixed,e=>showToast("Gagal memuat produk: "+e.message));
+    window.__productUnsub=db.collection("products").where("ownerId","==",currentUserId).onSnapshot(s=>{renderMyProductsFixed(s);const c=document.getElementById("tkProducts");if(c)c.textContent=s.size;},e=>showToast("Gagal memuat produk: "+e.message));
   };
   function renderMyProductsFixed(s){
     const g=document.getElementById("myProductGrid");if(!g)return;
-    const pc=document.getElementById("storeProductCount");if(pc)pc.textContent=s.size;
     if(s.empty){g.innerHTML='<div class="empty-state">Belum ada produk. Klik "+ Tambah Produk" untuk menambahkan produk.</div>';return;}
     g.innerHTML=s.docs.map(d=>{const p=d.data();return `<div class="product-card"><div class="product-photo">${esc(p.icon||"🌱")}</div><div class="product-body"><h3>${esc(p.name)}</h3><p>${esc(p.description||"Produk pertanian")}</p><div class="product-price">${formatRupiah(p.price||0)}</div><div class="product-meta">${esc(p.stock||0)} ${esc(p.unit||"unit")} • ${esc(p.category||"-")}</div><div class="product-actions"><button class="btn btn-outline" onclick="editProductFixed('${d.id}')">Edit</button><button class="btn btn-danger" onclick="deleteProductFixed('${d.id}')">Hapus</button></div></div></div>`}).join("");
   }
@@ -3100,6 +3113,8 @@ updateCartCount();
     if(!currentUserId){showToast("Sesi pengguna belum siap.");return;}
     const v=id=>document.getElementById(id)?.value||"";
     if(!v("newProductName").trim()){showToast("Nama produk belum diisi.");return;}
+    if(num(v("newProductPrice"))<=0){showToast("Harga harus lebih dari 0.");return;}
+    if(!Number.isInteger(num(v("newProductStock")))||num(v("newProductStock"))<1){showToast("Stok minimal 1 (bilangan bulat).");return;}
     db.collection("products").add({ownerId:currentUserId,ownerName:(userData[currentRole]||{}).name||"",name:v("newProductName").trim(),category:v("newProductCategory"),price:num(v("newProductPrice")),stock:num(v("newProductStock")),unit:v("newProductUnit")||"unit",description:v("newProductDescription"),icon:"🌱",active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{closeModal("modalProduk");showPage("toko");showToast("Produk berhasil dipublikasikan dan tampil di Toko Saya.");}).catch(e=>showToast("Gagal menyimpan produk: "+e.message));
   };
   window.editProductFixed=function(id){
@@ -3141,7 +3156,7 @@ updateCartCount();
     db.collection("users").doc(currentUserId).get().then(d=>{
       if(!d.exists)return;const p=d.data();
       const set=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val||""};
-      set("profilePhoneInput",p.phone);set("profileProvinceInput",p.province||"");set("profileDistrictInput",p.district);set("profileAddressInput",p.address);
+      set("profilePhoneInput",p.phone);set("profileProvinceInput",p.province||"Lampung");set("profileDistrictInput",p.district);set("profileAddressInput",p.address);
       const st=document.getElementById("storeTitle");if(st)st.textContent="🏪 "+(p.storeName||"Toko Saya");
     });
   };
@@ -3152,66 +3167,269 @@ updateCartCount();
   };
 
   // Extend login profile initialization so all modules are connected after authentication.
-  window.loadUserProfile=function(user){
-    // UID Firebase adalah sumber identitas utama. Jangan pernah
-    // mencari users berdasarkan email/password.
-    if(!user || !user.uid){
-      showLoginScreen();
-      return;
-    }
-
-    currentUserId=user.uid;
-    try { cart = JSON.parse(localStorage.getItem(cartStorageKey()) || "[]"); } catch(e) { cart=[]; }
-    updateCartCount();
-
-    db.collection("users").doc(user.uid).get().then(function(d){
-      if(!d.exists){
-        showAuthError("Akun Firebase ada, tetapi profil PETANI belum ditemukan. Silakan daftar melalui PETANI.");
-        return auth.signOut();
-      }
-
+  window.loadUserProfile=function(user,tries){
+    db.collection("users").doc(user.uid).get().then(d=>{
+      if(!d.exists){ if(window.__registering&&(tries||0)<8){setTimeout(()=>window.loadUserProfile(user,(tries||0)+1),600);return;} auth.signOut();return;}
       const p=d.data();
-      const authEmail=(user.email||"").trim().toLowerCase();
-      const profileEmail=(p.email||"").trim().toLowerCase();
-
-      // Jika profil memiliki email dan berbeda dari Firebase Auth, jangan
-      // mencampurkan data dua akun. Profil ditautkan kembali ke UID yang login.
-      if(profileEmail && authEmail && profileEmail!==authEmail){
-        showAuthError("Data profil akun tidak cocok dengan email login. Data tidak dicampurkan.");
-        return auth.signOut();
-      }
-
       const roles=normalizedRoles(p);
       let active=p.activeRole || p.role || (roles.pengguna ? "pengguna" : "mitra");
       if(!roles[active]) active=roles.pengguna ? "pengguna" : "mitra";
-
-      window.__petaniProfile={...p, email:authEmail || profileEmail, roles, activeRole:active, uid:user.uid};
-      currentRole=active;
       currentUserId=user.uid;
-
-      userData.pengguna={name:p.name||authEmail,initials:initialsOf(p.name||authEmail),storeName:p.storeName||"",role:"Petani Pengguna"};
-      userData.mitra={name:p.name||authEmail,initials:initialsOf(p.name||authEmail),storeName:p.storeName||"",role:"Petani Mitra"};
-
+      window.__petaniProfile={...p,roles,activeRole:active};
+      currentRole=active;
+      userData.pengguna={name:p.name||user.email,initials:initialsOf(p.name||user.email),storeName:p.storeName||"",role:"Petani Pengguna"};
+      userData.mitra={name:p.name||user.email,initials:initialsOf(p.name||user.email),storeName:p.storeName||"",role:"Petani Mitra"};
       document.getElementById("loginScreen").style.display="none";
       document.getElementById("app").style.display="block";
-
       const hasBoth=roles.pengguna&&roles.mitra;
       const switchBtn=document.getElementById("roleSwitchBtn");
       if(switchBtn) switchBtn.style.display=hasBoth?"inline-flex":"none";
-
-      // Simpan email resmi dari Firebase ke profil bila profil lama belum punya email.
-      const profilePatch={email:authEmail,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-      if(!p.roles) profilePatch.roles=roles;
-      db.collection("users").doc(user.uid).set(profilePatch,{merge:true}).catch(function(e){
-        console.warn("Profil email/roles belum tersinkron:",e);
-      });
-
       setRoleInterface(active);
       loadProfileData();
-    }).catch(function(e){
-      showAuthError("Gagal memuat profil akun: "+e.message);
-    });
+      if(hasBoth && !p.roles){
+        db.collection("users").doc(user.uid).update({roles:roles,activeRole:active});
+      }
+    }).catch(e=>showToast("Gagal memuat profil: "+e.message));
   };
+})();
+
+
+/* =====================================================
+   MARKETPLACE & TRANSAKSI — data nyata dari Firestore
+   products -> marketplace -> keranjang -> checkout -> orders
+   Semua angka/daftar di Dashboard, Toko Saya, Transaksi, dan
+   Notifikasi dihitung dari dokumen milik UID yang login.
+===================================================== */
+(function(){
+  const esc=v=>{const d=document.createElement("div");d.textContent=v==null?"":String(v);return d.innerHTML.replace(/"/g,"&quot;").replace(/'/g,"&#39;");};
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0;};
+  const TS=()=>firebase.firestore.FieldValue.serverTimestamp();
+  const setT=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const ST={menunggu_pembayaran:["Menunggu Pembayaran","warning"],dibayar:["Dibayar","info"],diproses:["Diproses","info"],dikirim:["Dikirim","info"],selesai:["Selesai","success"],dibatalkan:["Dibatalkan","danger"]};
+  const CAT={"Bibit":"bibit","Pupuk":"pupuk","Alat Tani":"alat","Hasil Tani":"produk"};
+  const ms=o=>(o.updatedAt&&o.updatedAt.toMillis?o.updatedAt.toMillis():0)||(o.createdAt&&o.createdAt.toMillis?o.createdAt.toMillis():0);
+  const fmtDate=t=>{const d=t&&t.toDate?t.toDate():null;return d?d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}):"-";};
+  const oid=o=>"#"+o.id.slice(-6).toUpperCase();
+  const names=o=>(o.items||[]).map(i=>i.name+" ×"+i.qty).join(", ");
+  let market={}, buyOrders=[], sellOrders=[], unsubs=[];
+
+  /* ---------- Keranjang: dipisah per akun (UID) ---------- */
+  const cartKey=()=>"petaniCart_"+(currentUserId||"guest");
+  function saveCart(){try{localStorage.setItem(cartKey(),JSON.stringify(cart));}catch(e){}updateCartCount();}
+  function loadCart(){try{cart=JSON.parse(localStorage.getItem(cartKey())||"[]").filter(i=>i&&i.productId);}catch(e){cart=[];}updateCartCount();}
+
+  /* ---------- Marketplace ---------- */
+  function loadMarketplace(){
+    if(window.__marketUnsub)window.__marketUnsub();
+    window.__marketUnsub=db.collection("products").where("active","==",true).onSnapshot(s=>{
+      market={};s.docs.forEach(d=>{market[d.id]={id:d.id,...d.data()};});renderMarket();
+    },e=>showToast("Gagal memuat marketplace: "+e.message));
+  }
+  function renderMarket(){
+    const g=document.getElementById("productGrid");if(!g)return;
+    const list=Object.values(market).filter(p=>num(p.stock)>0).sort((a,b)=>ms(b)-ms(a));
+    if(!list.length){g.innerHTML='<div class="empty-state">Belum ada produk tersedia.</div>';return;}
+    g.innerHTML=list.map(p=>{const own=p.ownerId===currentUserId;
+      return `<div class="product-card" data-category="${esc(CAT[p.category]||"lainnya")}" data-search="${esc([p.name,p.description,p.ownerName,p.category].join(" ").toLowerCase())}"><div class="product-photo">${esc(p.icon||"🌱")}</div><div class="product-body"><h3>${esc(p.name)}</h3><p>${esc(p.description||"Produk pertanian")}</p><div class="product-price">${formatRupiah(num(p.price))}</div><div class="product-meta">${esc(p.stock)} ${esc(p.unit||"unit")} tersedia • ${esc(p.ownerName||"Penjual")}</div><div class="product-actions"><button class="btn btn-outline" onclick="openProductDetail('${p.id}')">Detail</button>${own?'<button class="btn btn-outline" disabled>Produk Anda</button>':`<button class="btn btn-primary" onclick="addToCart('${p.id}')">+ Keranjang</button>`}</div></div></div>`;}).join("");
+    applyFilter();
+  }
+  // Filter hanya untuk kartu Marketplace (#productGrid), bukan kartu di Toko Saya.
+  function applyFilter(){
+    const q=(document.getElementById("marketSearch").value||"").toLowerCase();
+    document.querySelectorAll("#productGrid .product-card").forEach(c=>{
+      const okCat=marketCategory==="all"||marketCategory==="jasa"||c.dataset.category===marketCategory;
+      c.style.display=okCat&&(c.dataset.search||"").includes(q)?"":"none";
+    });
+  }
+  window.filterCategory=function(c){marketCategory=c;marketTab(c==="jasa"?"jasa":"produk");applyFilter();};
+  window.filterMarketplace=applyFilter;
+
+  window.openProductDetail=function(id){
+    const p=market[id];if(!p){showToast("Produk tidak ditemukan.");return;}
+    const own=p.ownerId===currentUserId;
+    setT("detName",p.name);setT("detSeller","Dijual oleh "+(p.ownerName||"Penjual"));
+    document.getElementById("detBody").innerHTML=`<div class="product-photo" style="height:110px;border-radius:12px;margin-bottom:12px">${esc(p.icon||"🌱")}</div><div class="product-price">${formatRupiah(num(p.price))} <small style="font-size:11px;color:#6b7280">/ ${esc(p.unit||"unit")}</small></div><p style="font-size:12px;margin:8px 0">${esc(p.description||"Produk pertanian")}</p><div class="product-meta">Stok ${esc(p.stock)} ${esc(p.unit||"unit")} • ${esc(p.category||"-")} • ${esc(p.ownerName||"Penjual")}</div>`;
+    const q=document.getElementById("detQty");q.value=1;q.max=num(p.stock);
+    const b=document.getElementById("detAddBtn");b.disabled=own;b.textContent=own?"Produk Anda sendiri":"+ Tambah ke Keranjang";
+    b.onclick=()=>{addToCart(id,q.value);closeModal("modalDetail");};
+    openModal("modalDetail");
+  };
+
+  /* ---------- Keranjang ---------- */
+  window.addToCart=function(id,qty){
+    const p=market[id];qty=Math.max(1,parseInt(qty)||1);
+    if(!p||num(p.stock)<=0){showToast("Produk tidak tersedia.");return;}
+    if(p.ownerId===currentUserId){showToast("Anda tidak dapat membeli produk sendiri.");return;}
+    const ex=cart.find(i=>i.productId===id),total=(ex?ex.qty:0)+qty;
+    if(total>num(p.stock)){showToast("Jumlah melebihi stok ("+p.stock+" "+(p.unit||"unit")+").");return;}
+    if(ex)ex.qty=total;else cart.push({productId:id,name:p.name,price:num(p.price),icon:p.icon||"🌱",unit:p.unit||"unit",sellerId:p.ownerId,sellerName:p.ownerName||"Penjual",qty});
+    saveCart();showToast(p.name+" ditambahkan ke keranjang.");
+  };
+  window.changeCartQty=function(i,d){
+    const it=cart[i];if(!it)return;const p=market[it.productId],n=it.qty+d;
+    if(n<1)return;if(p&&n>num(p.stock)){showToast("Stok hanya "+p.stock+" "+(p.unit||"unit")+".");return;}
+    it.qty=n;saveCart();renderCart();
+  };
+  window.removeCart=function(i){cart.splice(i,1);saveCart();renderCart();};
+  window.renderCart=function(){
+    const list=document.getElementById("cartList"),totalEl=document.getElementById("cartTotal");
+    if(!cart.length){list.innerHTML='<div style="text-align:center;padding:25px;color:#6b7280;font-size:12px">🛒<br><br>Keranjang masih kosong.</div>';totalEl.textContent="Rp0";return;}
+    let total=0;
+    list.innerHTML=cart.map((it,i)=>{total+=it.price*it.qty;return `<div class="cart-item"><div class="cart-thumb">${esc(it.icon)}</div><div class="cart-item-main"><strong>${esc(it.name)}</strong><small>${formatRupiah(it.price)} × ${it.qty} ${esc(it.unit)} • ${esc(it.sellerName)}</small></div><button class="btn btn-outline" onclick="changeCartQty(${i},-1)">−</button><button class="btn btn-outline" onclick="changeCartQty(${i},1)">+</button><button class="btn btn-danger" onclick="removeCart(${i})">Hapus</button></div>`;}).join("");
+    totalEl.textContent=formatRupiah(total);
+  };
+
+  /* ---------- Checkout: keranjang -> orders (1 order per penjual) ---------- */
+  window.checkoutCart=function(){
+    if(!cart.length){showToast("Keranjang masih kosong.");return;}
+    // Segarkan harga/nama dari data terbaru; buang produk yang sudah tidak ada.
+    const before=cart.length;
+    cart=cart.filter(i=>market[i.productId]&&num(market[i.productId].stock)>0).map(i=>{const p=market[i.productId];return {...i,name:p.name,price:num(p.price),unit:p.unit||"unit"};});
+    saveCart();
+    if(cart.length<before)showToast("Sebagian produk sudah tidak tersedia dan dikeluarkan dari keranjang.");
+    if(!cart.length){renderCart();return;}
+    const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+    document.getElementById("coSummary").innerHTML=cart.map(i=>`<div class="cart-item"><div class="cart-thumb">${esc(i.icon)}</div><div class="cart-item-main"><strong>${esc(i.name)}</strong><small>${i.qty} ${esc(i.unit)} × ${formatRupiah(i.price)} • ${esc(i.sellerName)}</small></div><strong>${formatRupiah(i.price*i.qty)}</strong></div>`).join("");
+    setT("coTotal",formatRupiah(total));
+    const a=document.getElementById("coAddress");if(!a.value.trim())a.value=(window.__petaniProfile||{}).address||"";
+    closeModal("modalCart");openModal("modalCheckout");
+  };
+  window.confirmCheckout=function(){
+    const addr=document.getElementById("coAddress").value.trim(),method=document.getElementById("coMethod").value;
+    if(!addr){showToast("Alamat pengiriman wajib diisi.");return;}
+    if(!cart.length){showToast("Keranjang masih kosong.");return;}
+    const btn=document.getElementById("coBtn");btn.disabled=true;
+    const items=cart.map(i=>({productId:i.productId,qty:i.qty}));
+    const buyerName=(window.__petaniProfile||{}).name||"Pembeli";
+    let made=0;
+    db.runTransaction(async tx=>{
+      made=0;
+      const refs=items.map(i=>db.collection("products").doc(i.productId));
+      const snaps=await Promise.all(refs.map(r=>tx.get(r)));   // semua baca dulu, baru tulis
+      const by={};
+      snaps.forEach((s,k)=>{
+        const p=s.exists?s.data():null,it=items[k];
+        if(!p||p.active===false)throw new Error("Ada produk yang sudah tidak tersedia.");
+        if(p.ownerId===currentUserId)throw new Error("Tidak dapat membeli produk sendiri.");
+        if(num(p.stock)<it.qty)throw new Error("Stok "+p.name+" tersisa "+num(p.stock)+".");
+        tx.update(refs[k],{stock:num(p.stock)-it.qty});
+        (by[p.ownerId]=by[p.ownerId]||{sellerName:p.ownerName||"Penjual",items:[]}).items.push({productId:s.id,name:p.name,price:num(p.price),qty:it.qty,unit:p.unit||"unit",icon:p.icon||"🌱"});
+      });
+      Object.keys(by).forEach(sid=>{
+        const g=by[sid],sub=g.items.reduce((s,i)=>s+i.price*i.qty,0);
+        tx.set(db.collection("orders").doc(),{buyerId:currentUserId,buyerName,sellerId:sid,sellerName:g.sellerName,items:g.items,subtotal:sub,total:sub,address:addr,paymentMethod:method,status:"menunggu_pembayaran",createdAt:TS(),updatedAt:TS()});
+        made++;
+      });
+    }).then(()=>{
+      cart=[];saveCart();closeModal("modalCheckout");showPage("transaksi");
+      showToast(made+" pesanan dibuat. Silakan lakukan pembayaran (simulasi).");
+    }).catch(e=>showToast("Checkout gagal: "+e.message)).finally(()=>{btn.disabled=false;});
+  };
+
+  /* ---------- Alur status pesanan ---------- */
+  // pembeli: bayar, batalkan (hanya saat menunggu), terima | penjual: proses, kirim
+  const FLOW={pay:["dibayar","menunggu_pembayaran","buyerId"],receive:["selesai","dikirim","buyerId"],process:["diproses","dibayar","sellerId"],ship:["dikirim","diproses","sellerId"]};
+  window.orderAction=function(id,act){
+    if(act==="cancel")return cancelOrder(id);
+    const f=FLOW[act];if(!f)return;const ref=db.collection("orders").doc(id);
+    db.runTransaction(tx=>tx.get(ref).then(d=>{
+      if(!d.exists)throw new Error("Pesanan tidak ditemukan.");
+      const o=d.data();
+      if(o[f[2]]!==currentUserId)throw new Error("Anda tidak berwenang atas aksi ini.");
+      if(o.status!==f[1])throw new Error("Status pesanan sudah berubah, muat ulang.");
+      tx.update(ref,{status:f[0],updatedAt:TS()});
+    })).then(()=>showToast("Status pesanan: "+ST[f[0]][0]+".")).catch(e=>showToast("Gagal memperbarui pesanan: "+e.message));
+  };
+  function cancelOrder(id){
+    if(!confirm("Batalkan pesanan ini? Stok akan dikembalikan."))return;
+    const ref=db.collection("orders").doc(id);
+    db.runTransaction(async tx=>{
+      const d=await tx.get(ref);if(!d.exists)throw new Error("Pesanan tidak ditemukan.");
+      const o=d.data();
+      if(o.buyerId!==currentUserId)throw new Error("Hanya pembeli yang dapat membatalkan.");
+      if(o.status!=="menunggu_pembayaran")throw new Error("Pesanan yang sudah dibayar tidak dapat dibatalkan.");
+      const prefs=o.items.map(i=>db.collection("products").doc(i.productId));
+      const ps=await Promise.all(prefs.map(r=>tx.get(r)));
+      ps.forEach((s,k)=>{if(s.exists)tx.update(prefs[k],{stock:num(s.data().stock)+o.items[k].qty});});
+      tx.update(ref,{status:"dibatalkan",updatedAt:TS()});
+    }).then(()=>showToast("Pesanan dibatalkan, stok dikembalikan.")).catch(e=>showToast("Gagal membatalkan: "+e.message));
+  }
+
+  /* ---------- Orders realtime + semua tampilan turunan ---------- */
+  function loadOrders(){
+    stopOrders();
+    const err=e=>showToast("Gagal memuat transaksi: "+e.message),mp=d=>({id:d.id,...d.data()});
+    unsubs.push(db.collection("orders").where("buyerId","==",currentUserId).onSnapshot(s=>{buyOrders=s.docs.map(mp);renderOrders();},err));
+    unsubs.push(db.collection("orders").where("sellerId","==",currentUserId).onSnapshot(s=>{sellOrders=s.docs.map(mp);renderOrders();},err));
+  }
+  function stopOrders(){unsubs.forEach(u=>u());unsubs=[];buyOrders=[];sellOrders=[];}
+  function actions(o){
+    const b=(a,t,c)=>`<button class="btn ${c||"btn-primary"}" onclick="orderAction('${o.id}','${a}')">${t}</button>`;
+    if(o.kind==="beli"){
+      if(o.status==="menunggu_pembayaran")return b("pay","Bayar")+" "+b("cancel","Batalkan","btn-outline");
+      if(o.status==="dikirim")return b("receive","Pesanan Diterima");
+    }else{
+      if(o.status==="dibayar")return b("process","Proses");
+      if(o.status==="diproses")return b("ship","Kirim");
+    }
+    return "-";
+  }
+  function notif(o){
+    const n=(o.items||[]).map(i=>i.name).join(", ");
+    if(o.kind==="jual"){
+      if(o.status==="menunggu_pembayaran")return ["⏳","Menunggu pembayaran dari "+o.buyerName,n,false];
+      if(o.status==="dibayar")return ["🛒","Pesanan baru dari "+o.buyerName+" siap diproses",n,true];
+      if(o.status==="diproses")return ["📦","Pesanan untuk "+o.buyerName+" siap dikirim",n,true];
+      if(o.status==="dikirim")return ["🚚","Menunggu "+o.buyerName+" menerima pesanan",n,false];
+      if(o.status==="selesai")return ["💰","Pesanan selesai, "+formatRupiah(num(o.total))+" diterima",n,false];
+      return ["✖️","Pesanan dibatalkan oleh "+o.buyerName,n,false];
+    }
+    if(o.status==="menunggu_pembayaran")return ["💳","Selesaikan pembayaran ke "+o.sellerName,n,true];
+    if(o.status==="dibayar")return ["✅","Pembayaran diterima, menunggu "+o.sellerName+" memproses",n,false];
+    if(o.status==="diproses")return ["📦","Pesanan Anda sedang diproses "+o.sellerName,n,false];
+    if(o.status==="dikirim")return ["🚚","Pesanan dikirim, konfirmasi bila sudah diterima",n,true];
+    if(o.status==="selesai")return ["🌾","Pesanan dari "+o.sellerName+" selesai",n,false];
+    return ["✖️","Pesanan ke "+o.sellerName+" dibatalkan",n,false];
+  }
+  function renderOrders(){
+    const rows=[...buyOrders.map(o=>({...o,kind:"beli"})),...sellOrders.map(o=>({...o,kind:"jual"}))].sort((a,b)=>ms(b)-ms(a));
+    const paid=["dibayar","diproses","dikirim","selesai"],open=["menunggu_pembayaran","dibayar","diproses","dikirim"];
+    const sum=a=>a.reduce((s,o)=>s+num(o.total),0);
+    const income=sum(sellOrders.filter(o=>o.status==="selesai"));
+    setT("stIncome",formatRupiah(income));setT("statIncome",formatRupiah(income));setT("tkIncome",formatRupiah(income));
+    setT("stExpense",formatRupiah(sum(buyOrders.filter(o=>paid.includes(o.status)))));
+    setT("stPending",formatRupiah(sum(sellOrders.filter(o=>open.includes(o.status)))));
+    setT("stDone",rows.filter(o=>o.status==="selesai").length);
+    setT("tkOrders",sellOrders.length);
+    const tb=document.getElementById("orderRows");
+    if(tb)tb.innerHTML=rows.length?rows.map(o=>{const st=ST[o.status]||[o.status,"info"],buy=o.kind==="beli";
+      return `<tr><td>${oid(o)}</td><td>${fmtDate(o.createdAt)}</td><td>${buy?"Pembelian":"Penjualan"}</td><td>${esc(names(o))}<br><small>${buy?"Penjual: "+esc(o.sellerName):"Pembeli: "+esc(o.buyerName)} • ${esc(o.paymentMethod||"-")}${buy?"":" • Kirim ke: "+esc(o.address||"-")}</small></td><td>${formatRupiah(num(o.total))}</td><td><span class="badge ${st[1]}">${st[0]}</span></td><td>${actions(o)}</td></tr>`;}).join(""):'<tr><td colspan="7"><div class="empty-state">Belum ada transaksi.</div></td></tr>';
+    const item=(ic,t,s,badge)=>`<div class="list-item"><div class="list-main"><div class="list-icon">${ic}</div><div><strong>${esc(t)}</strong><small>${esc(s)}</small></div></div>${badge}</div>`;
+    const act=rows.slice(0,4).map(o=>{const st=ST[o.status]||[o.status,"info"];return item(o.kind==="beli"?"🛒":"💰",(o.kind==="beli"?"Pembelian ":"Penjualan ")+names(o),fmtDate(o.createdAt)+" • "+formatRupiah(num(o.total)),`<span class="badge ${st[1]}">${st[0]}</span>`);}).join("");
+    const da=document.getElementById("dashActivity");if(da)da.innerHTML=act||'<div class="empty-state">Belum ada aktivitas.</div>';
+    const ns=rows.map(o=>({o,n:notif(o)}));
+    const need=ns.filter(x=>x.n[3]).length;
+    const dn=document.getElementById("dashNotif");
+    if(dn)dn.innerHTML=ns.slice(0,3).map(x=>item(x.n[0],x.n[1],x.n[2],"")).join("")||'<div class="empty-state">Belum ada notifikasi.</div>';
+    const nl=document.getElementById("notifList");
+    if(nl)nl.innerHTML=ns.map(x=>item(x.n[0],x.n[1],x.n[2]+" • "+oid(x.o),x.n[3]?'<span class="badge warning">Perlu tindakan</span>':"")).join("")||'<div class="empty-state">Belum ada notifikasi.</div>';
+    const dot=document.getElementById("notifDot");if(dot)dot.style.display=need?"":"none";
+  }
+
+  /* ---------- Siklus hidup: mulai saat login, berhenti saat logout ---------- */
+  function startMarketplace(){
+    if(window.__mktUid===currentUserId)return;
+    window.__mktUid=currentUserId;loadCart();loadMarketplace();loadOrders();
+  }
+  function stopAll(){
+    ["__marketUnsub","__productUnsub","__jobUnsub","__farmUnsub"].forEach(k=>{if(window[k]){try{window[k]();}catch(e){}window[k]=null;}});
+    stopOrders();market={};cart=[];window.__mktUid=null;updateCartCount();renderMarket();renderOrders();
+  }
+  const _sri=window.setRoleInterface;
+  window.setRoleInterface=function(role){_sri(role);startMarketplace();};
+  const _sl=window.showLoginScreen;
+  window.showLoginScreen=function(){stopAll();_sl();};
+  window.logout=function(){stopAll();auth.signOut();};
 })();
 
 </script>
